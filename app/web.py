@@ -47,5 +47,9 @@ TEMPLATES.env.globals["question_html"] = question_html
 
 
 def render(request: Request, name: str, status_code: int = 200, **ctx):
+    from app.daily import fact_for, local_today, symbol_for
     ctx.setdefault("user", getattr(request.state, "user", None))
+    today = local_today(request.app.state.settings.timezone)
+    ctx.update(today_key=today.isoformat(), today_symbol=f"Today's symbol: {symbol_for(today).name}",
+               today_fact=fact_for(today))
     return TEMPLATES.TemplateResponse(request, name, ctx, status_code=status_code)

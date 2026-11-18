@@ -6,7 +6,7 @@ from app.practice.service import save_answer, start_attempt, submit
 def test_fun_font_and_brand(client):
     html = client.get("/login").text
     assert "fonts.googleapis.com/css2?family=Nunito" in html
-    assert 'class="brand"' in html and "/static/favicon.svg" in html
+    assert 'class="brand"' in html and "/icon.svg" in html
 
 
 def test_practice_home_is_friendly(child_client, junior_paper):

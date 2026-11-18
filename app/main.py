@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import sessionmaker
@@ -57,7 +57,13 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon():
-        return RedirectResponse("/static/favicon.svg", status_code=308)
+        return RedirectResponse("/icon.svg", status_code=308)
+
+    @app.get("/icon.svg", include_in_schema=False)
+    def daily_icon():
+        from app.daily import favicon_svg, local_today, symbol_for
+        svg = favicon_svg(symbol_for(local_today(settings.timezone)))
+        return Response(svg, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/health")
     def health():

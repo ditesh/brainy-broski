@@ -2,6 +2,12 @@
 {% block content %}
 <h1>Hi {{ user.display_name }}! 👋</h1>
 <p class="hello">Pick a challenge and show those problems who's boss.</p>
+<section class="card wonder" aria-labelledby="wonder-title">
+  <p class="wonder-label">🌟 Today's maths wonder</p>
+  <h2 id="wonder-title">{{ today_fact.title }}</h2>
+  <div>{{ today_fact.body | md }}</div>
+  <details><summary>Why does it work?</summary><div>{{ today_fact.why | md }}</div></details>
+</section>
 {% if in_progress %}
 <h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}

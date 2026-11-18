@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     claude_base_url: str = "https://api.anthropic.com"  # deliberately not ANTHROPIC_BASE_URL
     upload_token_minutes: int = 15
     secure_cookies: bool = False  # set true behind HTTPS
+    timezone: str = "Asia/Kuala_Lumpur"  # when 'today' changes for the daily symbol and fact
     base_url: str | None = None  # public URL for QR codes; defaults to request base URL
 
 

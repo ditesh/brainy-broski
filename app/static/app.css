@@ -27,6 +27,10 @@ body { margin: 0; font: var(--fw-regular) var(--fs-md)/1.55 var(--font-ui); colo
        background-image: radial-gradient(var(--bg-dot) 1.5px, transparent 1.5px); background-size: 22px 22px; }
 a { color: var(--accent); font-weight: var(--fw-bold); text-decoration: none; }
 .back { display: inline-flex; align-items: center; gap: 4px; margin-bottom: 4px; min-height: 44px; font-size: var(--fs-sm); }
+.wonder { border-color: var(--sun); background: color-mix(in srgb, var(--sun) 10%, var(--card)); }
+.wonder h2 { margin: 2px 0 6px; }
+.wonder-label { margin: 0; font-size: var(--fs-sm); font-weight: var(--fw-heavy); color: var(--muted); }
+.wonder summary { cursor: pointer; font-weight: var(--fw-bold); color: var(--accent); }
 .step { margin: 16px 0 6px; font-weight: var(--fw-heavy); }
 .picker { display: flex; flex-wrap: wrap; gap: 8px; }
 .pill { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 18px; border-radius: 999px;

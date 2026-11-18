@@ -1,6 +1,6 @@
 def test_pages_link_favicon(client):
     html = client.get("/login").text
-    assert 'rel="icon" href="/static/favicon.svg"' in html
+    assert 'rel="icon" href="/icon.svg' in html
     assert 'rel="apple-touch-icon" href="/static/apple-touch-icon.png"' in html
 
 
@@ -13,4 +13,4 @@ def test_favicon_files_served(client):
 
 def test_favicon_ico_redirects(client):
     r = client.get("/favicon.ico", follow_redirects=False)
-    assert r.status_code in (301, 307, 308) and r.headers["location"] == "/static/favicon.svg"
+    assert r.status_code in (301, 307, 308) and r.headers["location"] == "/icon.svg"
