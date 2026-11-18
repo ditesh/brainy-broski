@@ -76,3 +76,51 @@ SPANNING_LAYOUT = [
     [("text", "onto the next page with more words.\nWhat is the answer?"),
      ("problem", 3, "Final question.")],
 ]
+
+
+# ---- multi-section contest used by import tests ----
+PARTS = [("A", 1), ("B", 2), ("C", 3), ("D", 4)]
+
+
+def question_text(category: str, n: int) -> str:
+    # Junior Q1-5 repeat Primary Q6-10 word for word (like real IMONST papers)
+    if category == "Junior" and n <= 5:
+        return question_text("Primary", n + 5)
+    return f"{category} question number {n} about topic {n * 7 % 11} with extra words"
+
+
+def answer_for(category: str, n: int) -> str:
+    if category == "Junior" and n <= 5:
+        return answer_for("Primary", n + 5)
+    return str(n * 3 + (0 if category == "Primary" else 100))
+
+
+def contest_layout() -> list[list[tuple]]:
+    pages: list[list[tuple]] = []
+    for category, label in (("Primary", "Soalan"), ("Primary", "Problem"), ("Junior", "Problem")):
+        for part_idx, (part, pts) in enumerate(PARTS):
+            items: list[tuple] = [("heading", f"Part {part} ({pts} points each)")]
+            for n in range(part_idx * 5 + 1, part_idx * 5 + 6):
+                items.append(("problem", n, question_text(category, n)))
+            pages.append(items)
+    for category in ("Primary", "Junior"):
+        pages.append([("heading", f"Answers {category}")] +
+                     [("problem", n, answer_for(category, n)) for n in range(1, 21)])
+    return pages
+
+
+def contest_structure_dict() -> dict:
+    parts = [{"name": f"Part {p}", "points": pts, "first_question": i * 5 + 1, "last_question": i * 5 + 5}
+             for i, (p, pts) in enumerate(PARTS)]
+    return {
+        "sections": [
+            {"category": "Primary", "language": "ms", "first_page": 1, "last_page": 4, "parts": parts},
+            {"category": "Primary", "language": "en", "first_page": 5, "last_page": 8, "parts": parts},
+            {"category": "Junior", "language": "en", "first_page": 9, "last_page": 12, "parts": parts},
+        ],
+        "answer_keys": [
+            {"category": c, "page": 13 + i,
+             "answers": [{"question": n, "answer": answer_for(c, n)} for n in range(1, 21)]}
+            for i, c in enumerate(("Primary", "Junior"))
+        ],
+    }
