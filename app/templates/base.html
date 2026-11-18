@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Olympiad Practice{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Olympiad Practice</a>
+    {% if user %}
+    <nav>
+      {% if user.role.value == "parent" %}<a href="/parent">Papers</a>{% else %}<a href="/practice">Practice</a>{% endif %}
+      <a href="/progress">Progress</a>
+      <form method="post" action="/logout" class="inline"><button class="link">Log out {{ user.display_name }}</button></form>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
