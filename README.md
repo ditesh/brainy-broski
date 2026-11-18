@@ -57,6 +57,7 @@ The app stops when idle and starts again on the next visit (first page takes a c
 | `SECRET_KEY` | required | Signs login cookies |
 | `ANTHROPIC_API_KEY` | none | Claude API key |
 | `CLAUDE_MODEL` | `claude-opus-5-5` | Model for all AI calls |
+| `CLAUDE_BASE_URL` | `https://api.anthropic.com` | Claude API address. `ANTHROPIC_BASE_URL` is deliberately ignored so a value set for another tool (e.g. OpenRouter) can't redirect the app |
 | `DATA_DIR` | `./data` | PDFs, crops, photos, backups |
 | `DATABASE_URL` | `sqlite:///./data/app.db` | Database |
 | `SECURE_COOKIES` | `false` | Set `true` behind HTTPS |

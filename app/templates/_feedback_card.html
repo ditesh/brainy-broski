@@ -41,6 +41,7 @@
     </div>
     {% endif %}
   {% endif %}
+  {% if c.is_parent and d.get("error") %}<p class="error">Couldn't check this one: {{ d.error }}</p>{% endif %}
   {% if c.is_parent and r.diagnosis_status.value != "pending" %}
     <form method="post" action="/parent/responses/{{ r.id }}/rediagnose"><button class="link">Check this one again</button></form>
   {% endif %}

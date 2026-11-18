@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     secret_key: str
     anthropic_api_key: str | None = None
     claude_model: str = "claude-opus-5-5"
+    claude_base_url: str = "https://api.anthropic.com"  # deliberately not ANTHROPIC_BASE_URL
     upload_token_minutes: int = 15
     secure_cookies: bool = False  # set true behind HTTPS
     base_url: str | None = None  # public URL for QR codes; defaults to request base URL

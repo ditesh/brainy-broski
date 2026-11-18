@@ -79,3 +79,65 @@ def test_missing_api_key_is_a_clear_ai_error(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
     with pytest.raises(AIError, match="API key"):
         AnthropicAIClient(None, "m").structured(ReferenceSolution, "s", [], "t", "low")
+
+
+# ---- clearer errors ----
+
+def _status_error(code, body=None, msg="boom"):
+    req = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    resp = httpx.Response(code, request=req, json=body or {})
+    return anthropic.APIStatusError(msg, response=resp, body=body)
+
+
+def test_ignores_stray_anthropic_base_url(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://openrouter.ai/api")
+    with patch("app.ai.client.anthropic.Anthropic") as cls:
+        AnthropicAIClient("k", "m")
+        assert cls.call_args.kwargs["base_url"] == "https://api.anthropic.com"
+
+
+def test_custom_base_url_respected():
+    with patch("app.ai.client.anthropic.Anthropic") as cls:
+        AnthropicAIClient("k", "m", base_url="https://proxy.example")
+        assert cls.call_args.kwargs["base_url"] == "https://proxy.example"
+
+
+@pytest.mark.parametrize("code,body,expected", [
+    (401, {"error": {"message": "Invalid API key"}}, "API key was rejected"),
+    (403, None, "not allowed"),
+    (400, {"error": {"message": "Your credit balance is too low to access the Anthropic API."}}, "out of credit"),
+    (402, None, "out of credit"),
+    (404, {"error": {"message": "model: claude-x"}}, "model"),
+    (413, None, "too big"),
+    (429, None, "busy"),
+    (529, None, "busy"),
+    (500, None, "problem on Claude's side"),
+])
+def test_friendly_status_messages(mock_sdk, code, body, expected):
+    mock_sdk.messages.parse.side_effect = _status_error(code, body)
+    with pytest.raises(AIError) as e:
+        AnthropicAIClient("k", "m").structured(ReferenceSolution, "s", [], "t", "low")
+    msg = str(e.value)
+    assert expected in msg and "{" not in msg
+
+
+def test_connection_message(mock_sdk):
+    mock_sdk.messages.parse.side_effect = anthropic.APIConnectionError(request=httpx.Request("POST", "https://x"))
+    with pytest.raises(AIError, match="Couldn't reach Claude"):
+        AnthropicAIClient("k", "m").structured(ReferenceSolution, "s", [], "t", "low")
+
+
+def test_failed_diagnosis_reason_shown_to_parent_only(parent_client, child_client, db, junior_paper, child, parent,
+                                                      fake_ai, settings):
+    from app.ai.schemas import ReferenceSolution as RS
+    from app.diagnosis.service import diagnose_response
+    from app.practice.service import save_answer, start_attempt, submit, submit_retry
+    a = start_attempt(db, child, junior_paper, "practice", [2])
+    save_answer(db, a, 2, "5")
+    submit(db, a)
+    r = a.responses[0]
+    submit_retry(db, r, "6")
+    fake_ai.add(RS, AIError("Claude is busy right now. Try again in a minute."))
+    diagnose_response(db, r.id, fake_ai, settings)
+    assert "Claude is busy" in parent_client.get(f"/responses/{r.id}/feedback").text
+    assert "Claude is busy" not in child_client.get(f"/responses/{r.id}/feedback").text

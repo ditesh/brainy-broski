@@ -26,6 +26,7 @@ def ensure_reference_solution(db: Session, problem: Problem, crop_paths: list[Pa
                                 "Solve this question. Give clear numbered steps.", "high")
         except AIError as e:
             log.warning("reference solve failed for problem %s: %s", problem.id, e)
+            problem._last_error = str(e)
             return False  # verified stays None: try again later
         if is_correct(sol.final_answer, problem.answer, problem.answer_type):
             problem.reference_solution = "\n".join(f"{i}. {s}" for i, s in enumerate(sol.steps, start=1))
@@ -70,6 +71,8 @@ def _diagnose(db: Session, response_id: int, ai: AIClient, settings: Settings) -
     if not ensure_reference_solution(db, problem, crops, ai):
         r.label = Label.unsure
         r.diagnosis = {"unverified": True}
+        if getattr(problem, "_last_error", None):
+            r.diagnosis["error"] = problem._last_error
         r.diagnosis_status = DiagnosisStatus.done if problem.verified is False else DiagnosisStatus.failed
         db.commit()
         return
@@ -81,6 +84,7 @@ def _diagnose(db: Session, response_id: int, ai: AIClient, settings: Settings) -
         d = ai.structured(Diagnosis, DIAGNOSE_SYSTEM, images, _diagnosis_text(r, problem, has_photo), "medium")
     except AIError as e:
         log.warning("diagnosis failed for response %s: %s", r.id, e)
+        r.diagnosis = {"error": str(e)}
         r.label, r.diagnosis_status = Label.unsure, DiagnosisStatus.failed
         db.commit()
         return
