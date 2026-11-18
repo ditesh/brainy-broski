@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row" style="justify-content:space-between">
+  <strong>{{ a.paper.title }}</strong>
+  {% if deadline %}<span class="timer" id="timer" data-deadline="{{ deadline }}">--:--</span>{% endif %}
+</div>
+<nav class="navgrid" aria-label="Questions">
+  {% for n in numbers %}
+  <a href="/attempts/{{ a.id }}?q={{ n }}" class="{% if n in answered %}answered{% endif %} {% if n == current %}current{% endif %}">{{ n }}</a>
+  {% endfor %}
+</nav>
+<div class="card">
+  <p><strong>Question {{ current }}</strong> <span class="muted">· {{ pq.points }} point{{ "s" if pq.points != 1 }}</span></p>
+  {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ current }}">{% endfor %}
+</div>
+<form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack" style="max-width:none">
+  <input type="hidden" name="q" value="{{ current }}">
+  {% set t = pq.problem.answer_type.value %}
+  {% if t == "mcq" %}
+    <div class="mcq">
+      {% for letter in "ABCDE" %}
+      <button name="answer" value="{{ letter }}" class="{% if r.first_answer == letter %}selected{% endif %}"
+              onclick="this.form.go.value='{{ next or current }}'">{{ letter }}</button>
+      {% endfor %}
+    </div>
+  {% else %}
+    <label>Your answer
+      <input name="answer" value="{{ r.first_answer or '' }}" autocomplete="off"
+             {% if t == "integer" %}inputmode="numeric"{% elif t == "fraction" %}inputmode="text" placeholder="e.g. 3/4"{% endif %}>
+    </label>
+  {% endif %}
+  <input type="hidden" name="go" value="{{ next or current }}">
+  <div class="row">
+    {% if prev %}<button onclick="this.form.go.value='{{ prev }}'">← Back</button>{% endif %}
+    {% if t != "mcq" %}<button class="primary" onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>{% endif %}
+  </div>
+</form>
+<form method="post" action="/attempts/{{ a.id }}/submit" id="submit-form" style="margin-top:24px"
+      onsubmit="return confirm('Hand in your paper? You answered {{ answered | length }} of {{ numbers | length }}.')">
+  <button>Hand in paper</button>
+</form>
+{% endblock %}
+{% block scripts %}
+{% if deadline %}
+<script>
+(function () {
+  var el = document.getElementById("timer"), end = new Date(el.dataset.deadline).getTime();
+  function tick() {
+    var left = Math.max(0, Math.round((end - Date.now()) / 1000));
+    el.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+    if (left === 0) { var f = document.getElementById("answer-form"); f.go.value = "submit"; f.submit(); return; }
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+{% endif %}
+{% endblock %}

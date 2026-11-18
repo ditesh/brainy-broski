@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ a.paper.title }}</h1>
+<p class="card" style="font-size:1.3rem"><strong>{{ a.score }} / {{ a.max_score }}</strong> points</p>
+
+{% set open_misses = misses | selectattr("retry_answer", "none") | list %}
+{% if open_misses and is_owner %}
+<h2>Have another look</h2>
+<p class="muted">Not quite on these. Check your working and try once more.</p>
+{% endif %}
+
+{% for r in rows %}
+  {% set q = r.paper_question %}
+  <div class="card" id="r{{ r.id }}">
+    <div class="row" style="justify-content:space-between">
+      <strong>Question {{ q.number }}</strong>
+      {% if r.correct_first %}<span class="good">✓ Correct</span>
+      {% elif r.correct_first is none %}<span class="muted">Not answered</span>
+      {% elif r.correct_retry %}<span class="good">✓ Fixed on second try</span>
+      {% else %}<span class="bad">✗ Not quite</span>{% endif %}
+    </div>
+    {% if r.correct_first == false %}
+      {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ q.number }}">{% endfor %}
+      <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
+      {% if r.retry_answer is none and is_owner %}
+        <form method="post" action="/responses/{{ r.id }}/retry" class="row">
+          <label style="flex:1 1 160px">Try again <input name="answer" autocomplete="off" {% if q.problem.answer_type.value == "integer" %}inputmode="numeric"{% endif %}></label>
+          <button class="primary">Check</button>
+        </form>
+      {% elif r.correct_retry %}
+        <p class="good">Nice — you fixed it! That was a careless slip. Slow down on this kind of step next time.</p>
+      {% elif r.diagnosis_status.value == "none" and not r.photo_path and is_owner %}
+        <p>Let's find out what happened. Take a photo of your working for this question.</p>
+        <div class="row">
+          <a class="button primary" href="/responses/{{ r.id }}/photo">Take a photo of my working</a>
+          <form method="post" action="/responses/{{ r.id }}/skip-photo"><button>I didn't write much — skip</button></form>
+        </div>
+      {% else %}
+        <a class="button" href="/responses/{{ r.id }}/feedback">See feedback</a>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endfor %}
+{% if misses %}<p><a class="button" href="/attempts/{{ a.id }}/feedback">All feedback for this paper</a></p>{% endif %}
+{% endblock %}
