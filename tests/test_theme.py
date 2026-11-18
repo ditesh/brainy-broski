@@ -60,3 +60,10 @@ def test_select_uses_custom_centred_arrow():
     css = Path("app/static/app.css").read_text()
     rule = re.search(r"(?m)^select \{([^}]*)\}", css).group(1)
     assert "appearance: none" in rule and "50%" in rule and "padding-right" in rule
+
+
+def test_app_is_called_brainy_broski(client):
+    html = client.get("/login").text
+    assert "<title>Brainy Broski</title>" in html
+    assert "Brainy Broski</a>" in html
+    assert "Olympiad Practice" not in html

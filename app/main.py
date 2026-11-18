@@ -28,7 +28,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     except Exception:  # never block startup on this
         import logging
         logging.getLogger(__name__).exception("startup backfill failed")
-    app = FastAPI(title="Olympiad Practice")
+    app = FastAPI(title="Brainy Broski")
     app.state.settings = settings
     app.state.session_factory = session_factory
 

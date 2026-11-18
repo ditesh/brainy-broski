@@ -1,4 +1,4 @@
-# Olympiad Practice
+# Brainy Broski
 
 A private web app for practising past maths olympiad papers (IMONST, SASMO, Kangaroo, ASMO).
 The child does a paper on screen. Wrong answers get one silent retry, then a photo of the

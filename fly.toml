@@ -1,5 +1,5 @@
 # Fly.io config. Run `fly launch --no-deploy --copy-config` and pick your own app name.
-app = "olympiad-practice"
+app = "brainy-broski"
 primary_region = "sin"
 
 [build]

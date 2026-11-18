@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Olympiad Practice{% endblock %}</title>
+  <title>{% block title %}Brainy Broski{% endblock %}</title>
   <link rel="icon" href="/icon.svg?d={{ today_key }}" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
   <meta name="theme-color" content="#3b6cf0">
@@ -19,7 +19,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/"><img src="/icon.svg?d={{ today_key }}" alt="" title="{{ today_symbol }}"> Olympiad Practice</a>
+    <a class="brand" href="/"><img src="/icon.svg?d={{ today_key }}" alt="" title="{{ today_symbol }}"> Brainy Broski</a>
     {% if user %}
     <nav>
       {% if user.role.value == "parent" %}<a href="/parent">📚 Papers</a>{% else %}<a href="/practice">🚀 Practice</a>{% endif %}
