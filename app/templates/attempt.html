@@ -35,9 +35,9 @@
     {% if t != "mcq" %}<button class="primary" onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>{% endif %}
   </div>
 </form>
-<form method="post" action="/attempts/{{ a.id }}/submit" id="submit-form" style="margin-top:24px"
+<form method="post" action="/attempts/{{ a.id }}/submit" id="submit-form" style="margin-top:28px;text-align:center"
       onsubmit="return confirm('Hand in your paper? You answered {{ answered | length }} of {{ numbers | length }}.')">
-  <button>Hand in paper</button>
+  <button>📮 Hand in paper</button>
 </form>
 {% endblock %}
 {% block scripts %}

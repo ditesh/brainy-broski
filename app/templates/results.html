@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>{{ a.paper.title }}</h1>
-<p class="card" style="font-size:1.3rem"><strong>{{ a.score }} / {{ a.max_score }}</strong> points</p>
+<div class="card scorecard" {% if stars == 3 %}data-confetti{% endif %}>
+  <div class="stars" aria-label="{{ stars }} of 3 stars">{% for i in range(3) %}<span class="star{% if i < stars %} on{% endif %}">★</span>{% endfor %}</div>
+  <div class="big">{{ a.score }} / {{ a.max_score }}</div>
+  <div class="muted">points</div>
+  <div class="cheer">{% if stars == 3 %}Amazing work! 🎉{% elif stars == 2 %}Great job! 💪{% elif stars == 1 %}Good effort — let's level up! 🌱{% else %}Every mistake is a lesson. Let's dig in! 🔍{% endif %}</div>
+</div>
 
 {% set open_misses = misses | selectattr("retry_answer", "none") | list %}
 {% if open_misses and is_owner %}
-<h2>Have another look</h2>
-<p class="muted">Not quite on these. Check your working and try once more.</p>
+<h2>🔍 Have another look</h2>
+<p class="muted">Not quite on these. Check your working and try once more — lots of mistakes are tiny slips!</p>
 {% endif %}
 
 {% for r in rows %}
   {% set q = r.paper_question %}
-  <div class="card" id="r{{ r.id }}">
+  <div class="card {% if r.correct_first or r.correct_retry %}is-good{% elif r.correct_first == false %}is-bad{% endif %}" id="r{{ r.id }}">
     <div class="row" style="justify-content:space-between">
       <strong>Question {{ q.number }}</strong>
-      {% if r.correct_first %}<span class="good">✓ Correct</span>
+      {% if r.correct_first %}<span class="good">✓ Nailed it</span>
       {% elif r.correct_first is none %}<span class="muted">Not answered</span>
       {% elif r.correct_retry %}<span class="good">✓ Fixed on second try</span>
       {% else %}<span class="bad">✗ Not quite</span>{% endif %}
@@ -28,11 +33,11 @@
           <button class="primary">Check</button>
         </form>
       {% elif r.correct_retry %}
-        <p class="good">Nice — you fixed it! That was a careless slip. Slow down on this kind of step next time.</p>
+        <p class="good">Nice — you fixed it! 🙌 That was a careless slip. Slow down on this kind of step next time.</p>
       {% elif r.diagnosis_status.value == "none" and not r.photo_path and is_owner %}
         <p>Let's find out what happened. Take a photo of your working for this question.</p>
         <div class="row">
-          <a class="button primary" href="/responses/{{ r.id }}/photo">Take a photo of my working</a>
+          <a class="button primary" href="/responses/{{ r.id }}/photo">📸 Take a photo of my working</a>
           <form method="post" action="/responses/{{ r.id }}/skip-photo"><button>I didn't write much — skip</button></form>
         </div>
       {% else %}
@@ -42,4 +47,29 @@
   </div>
 {% endfor %}
 {% if misses %}<p><a class="button" href="/attempts/{{ a.id }}/feedback">All feedback for this paper</a></p>{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if stars == 3 %}
+<script>
+(function () {
+  var host = document.querySelector("[data-confetti]");
+  if (!host || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var c = document.createElement("canvas"), ctx = c.getContext("2d");
+  c.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:50";
+  document.body.appendChild(c);
+  function size() { c.width = innerWidth; c.height = innerHeight; } size(); addEventListener("resize", size);
+  var colors = ["#4a5ae6", "#7a3fd6", "#ffc93c", "#1a8a4a", "#ff6b6b"], bits = [];
+  for (var i = 0; i < 140; i++) bits.push({x: Math.random() * c.width, y: -20 - Math.random() * c.height * .5,
+    vx: -2 + Math.random() * 4, vy: 2 + Math.random() * 4, r: Math.random() * 6.28, s: 6 + Math.random() * 6,
+    col: colors[i % colors.length]});
+  var t0 = performance.now();
+  (function frame(t) {
+    ctx.clearRect(0, 0, c.width, c.height);
+    bits.forEach(function (b) { b.x += b.vx; b.y += b.vy; b.vy += .05; b.r += .1;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.col; ctx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2); ctx.restore(); });
+    if (t - t0 < 3500) requestAnimationFrame(frame); else c.remove();
+  })(t0);
+})();
+</script>
+{% endif %}
 {% endblock %}

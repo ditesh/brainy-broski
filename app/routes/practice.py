@@ -124,7 +124,10 @@ def attempt_results(attempt_id: int, request: Request, user: User = Depends(requ
     if a.submitted_at is None:
         raise HTTPException(404)
     rows = sorted(a.responses, key=lambda r: r.paper_question.number)
-    return render(request, "results.html", a=a, rows=rows, misses=misses(a), is_owner=a.user_id == user.id)
+    pct = (a.score / a.max_score) if a.max_score else 0
+    stars = 3 if pct >= 0.9 else 2 if pct >= 0.6 else 1 if pct >= 0.3 else 0
+    return render(request, "results.html", a=a, rows=rows, misses=misses(a), is_owner=a.user_id == user.id,
+                  stars=stars)
 
 
 @router.post("/responses/{response_id}/retry")

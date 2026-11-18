@@ -7,17 +7,20 @@
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
   <meta name="theme-color" content="#3b6cf0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
   <link rel="stylesheet" href="/static/app.css">
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
   {% block head %}{% endblock %}
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">Olympiad Practice</a>
+    <a class="brand" href="/"><img src="/static/favicon.svg" alt=""> Olympiad Practice</a>
     {% if user %}
     <nav>
-      {% if user.role.value == "parent" %}<a href="/parent">Papers</a>{% else %}<a href="/practice">Practice</a>{% endif %}
-      <a href="/progress">Progress</a>
+      {% if user.role.value == "parent" %}<a href="/parent">📚 Papers</a>{% else %}<a href="/practice">🚀 Practice</a>{% endif %}
+      <a href="/progress">📈 Progress</a>
       <form method="post" action="/logout" class="inline"><button class="link">Log out {{ user.display_name }}</button></form>
     </nav>
     {% endif %}

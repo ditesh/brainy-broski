@@ -9,7 +9,7 @@
   <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
 
   {% if r.diagnosis_status.value == "pending" %}
-    <p>Looking at your working… this takes about a minute.</p>
+    <p>🔎 Looking at your working… this takes about a minute.</p>
   {% elif r.diagnosis_status.value == "none" %}
     <p><a class="button" href="/attempts/{{ r.attempt_id }}/results#r{{ r.id }}">Finish this question on the results page</a></p>
   {% elif d.get("unverified") or not c.problem.verified %}
@@ -19,7 +19,7 @@
       {% if d.wrong_step %}<p>Here's where it slipped: <strong>“{{ d.wrong_step }}”</strong></p>{% endif %}
       {% if d.explanation %}<div>{{ d.explanation | md }}</div>{% endif %}
     {% elif c.label == "technique" %}
-      {% if d.hint %}<p><strong>Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
+      {% if d.hint %}<p><strong>💡 Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
     {% else %}
       <p>Not sure what went wrong here. Go through it with {{ c.parent_name }}.</p>
       {% if d.hint %}<p><strong>Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
@@ -32,7 +32,7 @@
     </details>
     {% if c.technique %}
     <div class="card" style="margin-top:12px">
-      <p style="margin-top:0"><strong>Technique: {{ c.technique.name }}</strong></p>
+      <p style="margin-top:0"><strong>🧠 The trick: {{ c.technique.name }}</strong></p>
       <p>{{ c.technique.description }}</p>
       {% if c.show_followups and c.r.attempt.user_id == user.id %}
         {% for f in c.followups %}{% with parent_name = c.parent_name %}{% include "_followup.html" %}{% endwith %}{% endfor %}

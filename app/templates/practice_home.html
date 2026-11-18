@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Practice</h1>
+<h1>Hi {{ user.display_name }}! 👋</h1>
+<p class="hello">Pick a challenge and show those problems who's boss.</p>
 {% if in_progress %}
-<h2>Carry on</h2>
+<h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}
   <div class="card row" style="justify-content:space-between">
     <span>{{ a.paper.title }}{% if a.mode == "contest" %} · timed{% endif %} · {{ a.question_numbers | length }} questions</span>
-    <a class="button primary" href="/attempts/{{ a.id }}">Continue</a>
+    <a class="button primary" href="/attempts/{{ a.id }}">Continue →</a>
   </div>
 {% endfor %}
 {% endif %}
 
-<h2>Start a paper</h2>
+<h2>🎯 Pick a challenge</h2>
 <form method="get" action="/practice" class="row">
   <label style="flex:1 1 200px">Level
     <select name="category" onchange="this.form.submit()">
@@ -25,7 +26,7 @@
 {% for contest, plist in grouped.items() %}
   <h2>{{ contest }}</h2>
   {% for p in plist %}
-  <details class="card">
+  <details class="card paper-pick">
     <summary>{{ p.title }}</summary>
     <form method="post" action="/practice/start" class="stack" style="margin-top:8px">
       <input type="hidden" name="paper_id" value="{{ p.id }}">
@@ -39,18 +40,18 @@
       </label>
       <label>Mode
         <select name="mode">
-          <option value="practice">Practice (no timer)</option>
-          {% if p.duration_min %}<option value="contest">Contest ({{ p.duration_min }} min timer)</option>{% endif %}
+          <option value="practice">🧘 Practice (no timer)</option>
+          {% if p.duration_min %}<option value="contest">⏱️ Contest ({{ p.duration_min }} min timer)</option>{% endif %}
         </select>
       </label>
-      <button class="primary">Start</button>
+      <button class="primary">Start! 🚀</button>
     </form>
   </details>
   {% endfor %}
 {% endfor %}
 
 {% if done %}
-<h2>Finished papers</h2>
+<h2>🏁 Finished papers</h2>
 {% for a in done %}
   <div class="row card" style="justify-content:space-between">
     <span>{{ a.paper.title }} · {{ a.score }} / {{ a.max_score }}</span>

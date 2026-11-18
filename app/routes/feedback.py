@@ -15,10 +15,10 @@ from app.web import render
 
 router = APIRouter()
 LABEL_TEXT = {
-    "careless_self_corrected": "Careless slip (you fixed it)",
-    "careless": "Careless slip",
-    "technique": "Technique to learn",
-    "unsure": "Not sure",
+    "careless_self_corrected": "🐾 Careless slip (you fixed it)",
+    "careless": "🐾 Careless slip",
+    "technique": "🧠 New trick to learn",
+    "unsure": "🤔 Not sure",
 }
 
 

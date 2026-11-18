@@ -7,7 +7,7 @@
 {% block content %}
 <h1>Feedback · {{ attempt.paper.title }}</h1>
 <p><a href="/attempts/{{ attempt.id }}/results">← Back to results</a></p>
-{% if not cards %}<p class="muted">Nothing to go over — well done!</p>{% endif %}
+{% if not cards %}<p class="muted">Nothing to go over — well done! 🌟</p>{% endif %}
 {% for c in cards %}{% include "_feedback_card.html" %}{% endfor %}
 {% endblock %}
 {% block scripts %}
