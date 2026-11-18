@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Progress{% if target and is_parent %} · {{ target.display_name }}{% endif %}</h1>
+{% if is_parent and children | length > 1 %}
+<form method="get" class="row"><select name="user" onchange="this.form.submit()">
+  {% for c in children %}<option value="{{ c.id }}" {% if target and c.id == target.id %}selected{% endif %}>{{ c.display_name }}</option>{% endfor %}
+</select></form>
+{% endif %}
+{% if not target %}<p class="muted">No child accounts yet.</p>{% else %}
+
+<h2>Why questions were missed (last 8 weeks)</h2>
+<div class="card">
+  <svg viewBox="0 0 {{ chart.width }} 150" width="100%" role="img" aria-label="Misses per week by reason" style="max-width:{{ chart.width * 1.6 }}px">
+    {% for b in chart.bars %}
+      {% for s in b.segs %}<rect class="bar {{ s.label }}" x="{{ b.x }}" y="{{ s.y }}" width="28" height="{{ s.h }}" rx="2"><title>{{ label_text[s.label] }}: {{ s.n }}</title></rect>{% endfor %}
+      {% if b.total %}<text x="{{ b.x + 14 }}" y="{{ (b.segs | map(attribute='y') | min) - 3 }}" text-anchor="middle" class="axis">{{ b.total }}</text>{% endif %}
+      <text x="{{ b.x + 14 }}" y="138" text-anchor="middle" class="axis">{{ b.start.strftime("%d/%m") }}</text>
+    {% endfor %}
+    <line x1="4" x2="{{ chart.width - 4 }}" y1="120.5" y2="120.5" class="baseline"/>
+  </svg>
+  <div class="row legend">
+    {% for l in labels %}<span><span class="swatch {{ l.value }}"></span> {{ label_text[l.value] }}</span>{% endfor %}
+  </div>
+</div>
+
+<h2>Techniques</h2>
+{% if techniques %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Technique</th><th>Tried</th><th>Missed</th><th>Missed (30 days)</th></tr></thead>
+  <tbody>
+  {% for t in techniques %}
+    <tr><td>{{ t.name }}{% if t.flagged %} <span class="chip technique">practise this</span>{% endif %}</td>
+        <td>{{ t.attempts }}</td><td>{{ t.misses }}</td><td>{{ t.recent_misses }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="muted">Do a paper to see techniques here.</p>{% endif %}
+
+<h2>Papers</h2>
+{% if history %}
+<div class="table-wrap"><table>
+  <thead><tr><th>Date</th><th>Paper</th><th>Score</th><th>Time</th></tr></thead>
+  <tbody>{% for h in history %}
+    <tr><td>{{ h.date.strftime("%d %b") }}</td><td><a href="/attempts/{{ h.id }}/results">{{ h.title }}</a>{% if h.questions < 20 %} <span class="muted">({{ h.questions }} q)</span>{% endif %}</td>
+        <td>{{ h.score }} / {{ h.max_score }}</td><td>{{ h.minutes }} min</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="muted">No papers yet.</p>{% endif %}
+
+<h2>Recent misses</h2>
+{% for r in misses %}{% set lab = effective_label(r) %}
+  <div class="card row" style="justify-content:space-between">
+    <a href="/responses/{{ r.id }}/feedback">{{ r.paper_question.paper.title }} Q{{ r.paper_question.number }}</a>
+    {% if lab %}<span class="chip {{ lab.value }}">{{ label_text[lab.value] }}{% if r.parent_override %} (changed){% endif %}</span>{% else %}<span class="muted">not checked yet</span>{% endif %}
+    {% if is_parent %}
+    <form method="post" action="/parent/responses/{{ r.id }}/override" class="row">
+      <select name="label" aria-label="Change reason">
+        <option value="">— automatic —</option>
+        {% for l in labels %}<option value="{{ l.value }}" {% if r.parent_override == l %}selected{% endif %}>{{ label_text[l.value] }}</option>{% endfor %}
+      </select>
+      <button>Change</button>
+    </form>
+    {% endif %}
+  </div>
+{% else %}<p class="muted">No misses yet.</p>{% endfor %}
+{% endif %}
+{% endblock %}

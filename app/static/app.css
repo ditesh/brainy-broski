@@ -52,3 +52,11 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line
 .timer { font-variant-numeric: tabular-nums; font-weight: 700; }
 details summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 .grid-review { display: grid; gap: 12px; }
+svg .bar.careless, .swatch.careless { fill: var(--careless); background: var(--careless); }
+svg .bar.careless_self_corrected, .swatch.careless_self_corrected { fill: var(--careless); opacity: .55; background: var(--careless); }
+svg .bar.technique, .swatch.technique { fill: var(--technique); background: var(--technique); }
+svg .bar.unsure, .swatch.unsure { fill: var(--unsure); background: var(--unsure); }
+svg .axis { fill: var(--muted); font-size: 10px; }
+svg .baseline { stroke: var(--line); }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; }
+.legend { font-size: .9rem; gap: 14px; margin-top: 8px; }
