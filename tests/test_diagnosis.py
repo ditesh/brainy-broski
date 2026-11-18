@@ -217,3 +217,28 @@ def test_unsure_with_photo_keeps_message(child_client, db, parent, response):
     response.photo_path = "photos/x.jpg"
     _done(db, response, Label.unsure, diag(label="unsure").model_dump())
     assert "Not sure what went wrong here" in child_client.get(f"/responses/{response.id}/feedback").text
+
+
+def test_solution_steps_not_numbered_twice(db, fake_ai, response):
+    from app.diagnosis.service import ensure_reference_solution
+    fake_ai.add(ReferenceSolution, ReferenceSolution(
+        steps=["1. Let the price be p.", "Step 2: Add them.", "3) So it is 21."], final_answer="21"))
+    p = response.paper_question.problem
+    p.verified = None
+    db.commit()
+    assert ensure_reference_solution(db, p, [], fake_ai)
+    assert p.reference_solution == "1. Let the price be p.\n2. Add them.\n3. So it is 21."
+
+
+def test_fix_stored_double_numbering(db, response):
+    from app.diagnosis.service import fix_double_numbering
+    p = response.paper_question.problem
+    p.reference_solution = "1. 1. Let the price be p.\n2. 2. Add them."
+    db.commit()
+    fix_double_numbering(db)
+    assert p.reference_solution == "1. Let the price be p.\n2. Add them."
+
+
+def test_numbered_steps_keeps_leading_decimals():
+    from app.diagnosis.service import numbered_steps
+    assert numbered_steps(["2.5 kg costs RM 10.", "12 apples"]) == "1. 2.5 kg costs RM 10.\n2. 12 apples"

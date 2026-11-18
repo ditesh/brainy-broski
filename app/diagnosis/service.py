@@ -1,5 +1,6 @@
 """Reference solutions (verified against the official answer) and diagnosis of misses."""
 import logging
+import re
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI
@@ -15,6 +16,24 @@ from app.techniques import TECHNIQUES
 
 log = logging.getLogger(__name__)
 SOLVE_TRIES = 2
+_STEP_NUMBER = re.compile(r"^\s*(?:step\s*)?\d+\s*[.):](?!\d)\s*", re.IGNORECASE)
+
+
+def numbered_steps(steps: list[str]) -> str:
+    """Number the steps ourselves, dropping any numbering Claude already put in."""
+    return "\n".join(f"{i}. {_STEP_NUMBER.sub('', s, count=1)}" for i, s in enumerate(steps, start=1))
+
+
+def fix_double_numbering(db: Session) -> None:
+    """Repair solutions saved before numbered_steps existed ("1. 1. ...")."""
+    for p in db.query(Problem).filter(Problem.reference_solution.is_not(None)):
+        lines = p.reference_solution.split("\n")
+        if not all(re.match(r"^\d+\. ", ln) for ln in lines):
+            continue
+        fixed = numbered_steps([ln.split(". ", 1)[1] for ln in lines])
+        if fixed != p.reference_solution:
+            p.reference_solution = fixed
+    db.commit()
 
 
 def ensure_reference_solution(db: Session, problem: Problem, crop_paths: list[Path], ai: AIClient) -> bool:
@@ -29,7 +48,7 @@ def ensure_reference_solution(db: Session, problem: Problem, crop_paths: list[Pa
             problem._last_error = str(e)
             return False  # verified stays None: try again later
         if is_correct(sol.final_answer, problem.answer, problem.answer_type):
-            problem.reference_solution = "\n".join(f"{i}. {s}" for i, s in enumerate(sol.steps, start=1))
+            problem.reference_solution = numbered_steps(sol.steps)
             problem.verified = True
             db.commit()
             return True

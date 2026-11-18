@@ -22,9 +22,12 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     from app.importer.pipeline import backfill_figures
     try:
         backfill_figures(session_factory, settings)
+        from app.diagnosis.service import fix_double_numbering
+        with session_factory() as db:
+            fix_double_numbering(db)
     except Exception:  # never block startup on this
         import logging
-        logging.getLogger(__name__).exception("figure backfill failed")
+        logging.getLogger(__name__).exception("startup backfill failed")
     app = FastAPI(title="Olympiad Practice")
     app.state.settings = settings
     app.state.session_factory = session_factory
