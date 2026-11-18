@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Review: {{ paper.title }}</h1>
+<p class="muted">Check each question picture, its answer and points. Questions marked "also in" are the same question in another paper and share their answer.</p>
+<div class="row">
+  {% if paper.published %}
+  <span class="chip">published</span>
+  <form method="post" action="/parent/papers/{{ paper.id }}/unpublish"><button>Unpublish</button></form>
+  {% else %}
+  <form method="post" action="/parent/papers/{{ paper.id }}/publish"><button class="primary">Publish for practice</button></form>
+  {% endif %}
+</div>
+<div class="grid-review">
+{% for c in cards %}
+  {% with q = c.q, shared = c.shared, candidates = c.candidates, version = c.version, error = None %}
+  {% include "_review_question.html" %}
+  {% endwith %}
+{% endfor %}
+</div>
+{% endblock %}

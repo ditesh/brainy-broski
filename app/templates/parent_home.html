@@ -1,2 +1,26 @@
 {% extends "base.html" %}
-{% block content %}<h1>Papers</h1>{% endblock %}
+{% block content %}
+<div class="row" style="justify-content:space-between">
+  <h1>Papers</h1>
+  <a class="button primary" href="/parent/import">Add a paper</a>
+</div>
+{% if not sources %}
+<p class="muted">No papers yet. Add a past-paper PDF that includes its answer key.</p>
+{% endif %}
+{% for s in sources %}
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <strong>{{ s.contest }} {{ s.year }}</strong>
+    <span class="muted">{{ s.filename }}</span>
+  </div>
+  <p class="muted">Status: {{ s.status.value.replace("_", " ") }}{% if s.error %} — <span class="error">{{ s.error }}</span>{% endif %}</p>
+  {% for p in papers[s.id] %}
+    <div class="row">
+      <a href="/parent/papers/{{ p.id }}/review">{{ p.category }}</a>
+      {% if p.published %}<span class="chip">published</span>{% else %}<span class="chip unsure">not published</span>{% endif %}
+    </div>
+  {% endfor %}
+  <p><a href="/parent/import/{{ s.id }}">Import settings</a></p>
+</div>
+{% endfor %}
+{% endblock %}

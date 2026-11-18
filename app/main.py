@@ -25,7 +25,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
     from app.auth import NotLoggedIn, router as auth_router
-    from app.routes import parent_import, practice
+    from app.routes import files, parent_import, parent_review, practice
 
     @app.exception_handler(NotLoggedIn)
     def _not_logged_in(request: Request, exc: NotLoggedIn):
@@ -34,6 +34,8 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.include_router(auth_router)
     app.include_router(parent_import.router)
     app.include_router(practice.router)
+    app.include_router(parent_review.router)
+    app.include_router(files.router)
 
     @app.get("/health")
     def health():

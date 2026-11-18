@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add a paper</h1>
+<p class="muted">Upload the PDF with the questions and the answer key. The tool will find the questions; you check them before the paper is used for practice.</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post" action="/parent/import" enctype="multipart/form-data" class="stack">
+  <label>PDF file <input type="file" name="file" accept="application/pdf" required></label>
+  <label>Contest
+    <select name="contest">{% for c in contests %}<option>{{ c }}</option>{% endfor %}</select>
+  </label>
+  <label>Year <input type="number" name="year" value="{{ this_year - 1 }}" min="1990" max="{{ this_year }}" required></label>
+  <label>Time allowed (minutes, optional) <input type="number" name="duration_min" min="1" max="600" inputmode="numeric"></label>
+  <button class="primary">Upload</button>
+</form>
+{% endblock %}

@@ -104,3 +104,55 @@ def child2_client(app, child2):
     c = TestClient(app)
     login_as(c, "kid2")
     return c
+
+
+# ---- imported contest fixtures (Tasks 7+) ----
+from app.ai.schemas import QuestionAnalysis  # noqa: E402
+from app.importer.pipeline import run_import  # noqa: E402
+from app.models import ImportStatus, Paper, PaperQuestion, SourcePdf  # noqa: E402
+from tests.fixtures.make_pdf import build_contest_pdf, contest_layout, contest_structure_dict  # noqa: E402
+from tests.support.contest import analysis_responder  # noqa: E402
+
+
+@pytest.fixture
+def contest_src(db, settings):
+    settings.data_dir.mkdir(parents=True, exist_ok=True)
+    (settings.data_dir / "pdfs").mkdir(exist_ok=True)
+    path = build_contest_pdf(settings.data_dir / "pdfs" / "1.pdf", contest_layout())
+    s = SourcePdf(filename="imonst.pdf", path=str(path), contest="IMONST", year=2020, duration_min=180,
+                  structure=contest_structure_dict(), status=ImportStatus.needs_review)
+    db.add(s)
+    db.commit()
+    return s
+
+
+def _import(db, settings, fake_ai, src, categories, publish):
+    fake_ai.respond(QuestionAnalysis, analysis_responder)
+    run_import(src.id, categories, db, fake_ai, settings)
+    papers = db.query(Paper).order_by(Paper.id).all()
+    if publish:
+        for p in papers:
+            p.published = True
+        db.commit()
+    return papers
+
+
+@pytest.fixture
+def imported_paper(db, settings, fake_ai, contest_src):
+    return _import(db, settings, fake_ai, contest_src, ["Junior"], publish=False)[0]
+
+
+@pytest.fixture
+def papers(db, settings, fake_ai, contest_src):
+    """Primary + Junior, published."""
+    ps = _import(db, settings, fake_ai, contest_src, ["Primary", "Junior"], publish=True)
+    return {p.category: p for p in ps}
+
+
+@pytest.fixture
+def junior_paper(papers):
+    return papers["Junior"]
+
+
+def get_pq(db, paper, n):
+    return db.query(PaperQuestion).filter_by(paper_id=paper.id, number=n).one()

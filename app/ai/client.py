@@ -54,10 +54,14 @@ class AnthropicAIClient:
         return resp.parsed_output
 
 
-def get_ai(request: Request) -> AIClient:
-    ai = getattr(request.app.state, "ai", None)
+def ensure_ai(app) -> AIClient:
+    ai = getattr(app.state, "ai", None)
     if ai is None:
-        s = request.app.state.settings
+        s = app.state.settings
         ai = AnthropicAIClient(s.anthropic_api_key, s.claude_model)
-        request.app.state.ai = ai
+        app.state.ai = ai
     return ai
+
+
+def get_ai(request: Request) -> AIClient:
+    return ensure_ai(request.app)

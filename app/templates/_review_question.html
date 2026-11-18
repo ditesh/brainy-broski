@@ -1,0 +1,38 @@
+<div class="card" id="q{{ q.id }}">
+  <div class="row" style="justify-content:space-between">
+    <strong>Q{{ q.number }}</strong>
+    <span class="muted">{{ q.part }}</span>
+  </div>
+  {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}?v={{ version }}" alt="Question {{ q.number }}">{% endfor %}
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form hx-post="/parent/questions/{{ q.id }}" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row" style="margin-top:8px">
+    <label style="flex:1 1 120px">Answer <input name="answer" value="{{ q.problem.answer }}"></label>
+    <label style="flex:1 1 110px">Type
+      <select name="answer_type">{% for t in answer_types %}<option value="{{ t.value }}" {% if t == q.problem.answer_type %}selected{% endif %}>{{ t.value }}</option>{% endfor %}</select>
+    </label>
+    <label style="flex:0 1 80px">Points <input name="points" type="number" min="0" value="{{ q.points }}"></label>
+    <label style="flex:1 1 100%">Techniques (comma separated) <input name="tags" value="{{ q.problem.tags | join(', ') }}"></label>
+    <button>Save</button>
+  </form>
+  <div class="row" style="margin-top:8px">
+    <span class="muted">Picture edges:</span>
+    <button hx-post="/parent/questions/{{ q.id }}/crop" hx-vals='{"dy0": -20}' hx-target="#q{{ q.id }}" hx-swap="outerHTML">Top ↑</button>
+    <button hx-post="/parent/questions/{{ q.id }}/crop" hx-vals='{"dy0": 20}' hx-target="#q{{ q.id }}" hx-swap="outerHTML">Top ↓</button>
+    <button hx-post="/parent/questions/{{ q.id }}/crop" hx-vals='{"dy1": -20}' hx-target="#q{{ q.id }}" hx-swap="outerHTML">Bottom ↑</button>
+    <button hx-post="/parent/questions/{{ q.id }}/crop" hx-vals='{"dy1": 20}' hx-target="#q{{ q.id }}" hx-swap="outerHTML">Bottom ↓</button>
+  </div>
+  {% if shared %}
+  <p class="muted">Also in:
+    {% for o in shared %}{{ o.paper.category }} Q{{ o.number }}{% if not loop.last %}, {% endif %}{% endfor %}
+    <button class="link" hx-post="/parent/questions/{{ q.id }}/unlink" hx-target="#q{{ q.id }}" hx-swap="outerHTML">Not the same question</button>
+  </p>
+  {% endif %}
+  {% if candidates %}
+  <form hx-post="/parent/questions/{{ q.id }}/link" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row">
+    <label style="flex:1 1 200px">Same question as
+      <select name="other_pq_id">{% for o in candidates %}<option value="{{ o.id }}">{{ o.paper.category }} Q{{ o.number }}</option>{% endfor %}</select>
+    </label>
+    <button>Link</button>
+  </form>
+  {% endif %}
+</div>
