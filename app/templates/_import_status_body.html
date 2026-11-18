@@ -10,7 +10,7 @@
   <form method="post" action="/parent/import/{{ src.id }}" class="stack">
     <p>Found these English papers. Tick the ones to import:</p>
     {% for c in categories %}
-      <label class="row" style="flex-direction:row;font-weight:400"><input type="checkbox" name="categories" value="{{ c }}" style="width:auto;min-height:0" {% if c == "Junior" %}checked{% endif %}> {{ c }}</label>
+      <label class="row check-row"><input type="checkbox" name="categories" value="{{ c }}" style="width:auto;min-height:0" {% if c == "Junior" %}checked{% endif %}> {{ c }}</label>
     {% endfor %}
     <button class="primary">Import</button>
   </form>

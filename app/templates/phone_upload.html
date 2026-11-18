@@ -11,7 +11,7 @@
   <h1>Photo of your working</h1>
   {% if error %}{{ alert("error", "Hmm, that didn't work", error) }}{% endif %}
   <form method="post" action="/u/{{ token }}" enctype="multipart/form-data" class="stack" id="f">
-    <label class="button primary" style="font-size:1.2rem;min-height:64px">
+    <label class="button primary big-button">
       Take photo
       <input type="file" name="photo" accept="image/*" capture="environment" required
              style="display:none" onchange="document.getElementById('f').submit()">
