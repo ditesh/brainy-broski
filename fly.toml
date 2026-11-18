@@ -1,32 +1,35 @@
-# Fly.io config. Run `fly launch --no-deploy --copy-config` and pick your own app name.
-app = "olympiad-practice"
-primary_region = "sin"
+# fly.toml app configuration file generated for brainy-broski on 2026-11-18T17:03:09Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
+
+app = 'brainy-broski'
+primary_region = 'sin'
 
 [build]
-
 [env]
-  DATA_DIR = "/data"
-  DATABASE_URL = "sqlite:////data/app.db"
-  SECURE_COOKIES = "true"
+  DATABASE_URL = 'sqlite:////data/app.db'
+  DATA_DIR = '/data'
+  SECURE_COOKIES = 'true'
 
 [[mounts]]
-  source = "data"
-  destination = "/data"
+  source = 'data'
+  destination = '/data'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
-[[http_service.checks]]
-  grace_period = "10s"
-  interval = "30s"
-  method = "GET"
-  path = "/health"
-  timeout = "5s"
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '512mb'
