@@ -84,7 +84,7 @@ def test_paper_status_last_whole_paper_attempt(db, junior_paper, child):
 
 def test_paper_list_shows_done_and_recent_warning(child_client, db, junior_paper, child):
     _take(db, child, junior_paper, {1: "18"})
-    html = child_client.get("/practice?category=Junior").text
+    html = child_client.get("/practice?contest=IMONST&level=Junior").text
     assert "Done today" in html
     assert "you might remember some answers" in html
 
@@ -94,7 +94,7 @@ def test_paper_list_no_warning_after_30_days(child_client, db, junior_paper, chi
     a = _take(db, child, junior_paper, {1: "18"})
     a.started_at = a.submitted_at = utcnow() - timedelta(days=40)
     db.commit()
-    html = child_client.get("/practice?category=Junior").text
+    html = child_client.get("/practice?contest=IMONST&level=Junior").text
     assert "Done " + a.submitted_at.strftime("%d %b") in html
     assert "you might remember some answers" not in html
 

@@ -34,22 +34,32 @@ def get_response(db: Session, response_id: int, user: User, allow_parent: bool =
 
 
 @router.get("/practice")
-def practice_home(request: Request, category: str = "Junior", user: User = Depends(require_user),
+def practice_home(request: Request, contest: str = "", level: str = "", user: User = Depends(require_user),
                   db: Session = Depends(get_db)):
     papers = (db.query(Paper).join(SourcePdf).filter(Paper.published.is_(True))
-              .order_by(SourcePdf.contest, SourcePdf.year.desc(), Paper.category).all())
-    categories = sorted({p.category for p in papers})
-    if category != "All" and category not in categories:
-        category = "All"
-    shown = [p for p in papers if category == "All" or p.category == category]
-    grouped: dict[str, list[Paper]] = defaultdict(list)
-    for p in shown:
-        grouped[p.source_pdf.contest].append(p)
+              .order_by(SourcePdf.year.desc(), Paper.id).all())
     attempts = db.query(Attempt).filter_by(user_id=user.id).order_by(Attempt.started_at.desc()).all()
+    # levels per competition, in the order the papers list them (e.g. Primary, Junior, Senior)
+    levels: dict[str, list[str]] = {}
+    for p in sorted(papers, key=lambda p: p.id):
+        lv = levels.setdefault(p.source_pdf.contest, [])
+        if p.category not in lv:
+            lv.append(p.category)
+    contests = sorted(levels)
+    last = next((a.paper for a in attempts if a.paper.published and a.paper.source_pdf.contest in levels), None)
+    if contest not in levels:
+        contest = last.source_pdf.contest if last else (contests[0] if contests else "")
+    choices = levels.get(contest, [])
+    if level not in choices:
+        if last and last.source_pdf.contest == contest:
+            level = last.category
+        else:
+            level = "Junior" if "Junior" in choices else (choices[0] if choices else "")
+    shown = [p for p in papers if p.source_pdf.contest == contest and p.category == level]
     in_progress = [a for a in attempts if a.submitted_at is None]
     done = [a for a in attempts if a.submitted_at is not None][:10]
-    return render(request, "practice_home.html", grouped=grouped, categories=categories, category=category,
-                  in_progress=in_progress, done=done, status=paper_status(db, user))
+    return render(request, "practice_home.html", contests=contests, contest=contest, levels=choices,
+                  level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user))
 
 
 @router.post("/practice/start")
