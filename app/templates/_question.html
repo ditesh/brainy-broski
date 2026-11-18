@@ -1,0 +1,11 @@
+{# Shows one question: clean text + its pictures, with the original crop one tap away.
+   Needs: pq (PaperQuestion). Optional: number. #}
+{% if pq.problem.transcription and pq.problem.transcription.strip() %}
+  <div class="qtext">{{ question_html(pq.problem.transcription, pq.figure_paths) }}</div>
+  <details class="original">
+    <summary>See the original</summary>
+    {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Original question {{ pq.number }}" loading="lazy">{% endfor %}
+  </details>
+{% else %}
+  {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ pq.number }}">{% endfor %}
+{% endif %}

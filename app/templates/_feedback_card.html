@@ -6,7 +6,7 @@
     <strong>Question {{ q.number }}</strong>
     {% if c.label and r.diagnosis_status.value != "pending" %}<span class="chip {{ c.label }}">{{ c.label_text[c.label] }}</span>{% endif %}
   </div>
-  {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ q.number }}">{% endfor %}
+  {% with pq = q %}{% include "_question.html" %}{% endwith %}
   <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
 
   {% if r.diagnosis_status.value == "pending" %}

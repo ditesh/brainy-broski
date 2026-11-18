@@ -192,3 +192,61 @@ def crop_box(pdf_path: Path, page_no: int, box: tuple[float, float, float, float
     with fitz.open(pdf_path) as doc:
         _save_clip(doc[page_no - 1], fitz.Rect(*box), out_path, dpi)
     return out_path
+
+
+# ---- figures (diagrams/pictures) inside a question ----
+MIN_FIG_W, MIN_FIG_H = 40.0, 30.0
+THIN = 3.0  # lines thinner than this (fraction bars, rules, underlines) are not figures
+
+
+def _merge(rects: list[fitz.Rect], gap: float = 6.0) -> list[fitz.Rect]:
+    rects = [fitz.Rect(r) for r in rects]
+    changed = True
+    while changed:
+        changed = False
+        out: list[fitz.Rect] = []
+        for r in rects:
+            for o in out:
+                if (fitz.Rect(o.x0 - gap, o.y0 - gap, o.x1 + gap, o.y1 + gap)).intersects(r):
+                    o |= r
+                    changed = True
+                    break
+            else:
+                out.append(fitz.Rect(r))
+        rects = out
+    return rects
+
+
+def extract_figures(pdf_path: Path, boxes: list[list], out_dir: Path, prefix: str, dpi: int = 200) -> list[Path]:
+    """Crop diagrams and embedded pictures that lie inside a question's crop boxes."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+    with fitz.open(pdf_path) as doc:
+        for page_no, x0, y0, x1, y1 in boxes:
+            page = doc[int(page_no) - 1]
+            clip = fitz.Rect(x0, y0, x1, y1)
+            parts: list[fitz.Rect] = []
+            for info in page.get_image_info():
+                r = fitz.Rect(info["bbox"]) & clip
+                if not r.is_empty and r.width * r.height > 400:
+                    parts.append(r)
+            for d in page.get_drawings():
+                r = fitz.Rect(d["rect"])
+                if r.width < THIN or r.height < THIN or not r.intersects(clip):
+                    continue
+                parts.append(r & clip)
+            figs = [r for r in _merge(parts) if r.width >= MIN_FIG_W and r.height >= MIN_FIG_H]
+            # pull in labels (A, B, 5 cm…) that sit on or just around the drawing
+            words = page.get_text("words", clip=clip)
+            for f in figs:
+                halo = fitz.Rect(f.x0 - 18, f.y0 - 18, f.x1 + 18, f.y1 + 18)
+                for w in words:
+                    wr = fitz.Rect(w[:4])
+                    if wr in halo and len(w[4]) <= 6:
+                        f |= wr
+            for f in sorted(figs, key=lambda r: (round(r.y0), r.x0)):
+                f = fitz.Rect(f.x0 - 3, f.y0 - 3, f.x1 + 3, f.y1 + 3) & page.rect
+                p = out_dir / f"{prefix}-fig{len(paths) + 1}.png"
+                page.get_pixmap(dpi=dpi, clip=f).save(str(p))
+                paths.append(p)
+    return paths

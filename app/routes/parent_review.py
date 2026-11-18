@@ -74,6 +74,15 @@ def update_question(pq_id: int, request: Request, answer: str = Form(...), answe
     return _card(request, db, q)
 
 
+@router.post("/parent/questions/{pq_id}/text")
+def update_text(pq_id: int, request: Request, transcription: str = Form(""), user: User = Depends(require_parent),
+                db: Session = Depends(get_db)):
+    q = _get_pq(db, pq_id)
+    q.problem.transcription = transcription.strip()
+    db.commit()
+    return _card(request, db, q)
+
+
 @router.post("/parent/questions/{pq_id}/crop")
 def nudge_crop(pq_id: int, request: Request, dy0: float = Form(0), dy1: float = Form(0),
                user: User = Depends(require_parent), db: Session = Depends(get_db)):

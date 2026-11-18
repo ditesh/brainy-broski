@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.auth import create_user
 from app.config import get_settings
-from app.db import Base, make_engine
+from app.db import ensure_schema, make_engine
 from app.models import Role
 from app.techniques import seed_techniques
 
@@ -17,8 +17,7 @@ def _session():
     s = get_settings()
     s.data_dir.mkdir(parents=True, exist_ok=True)
     eng = make_engine(s.database_url)
-    import app.models  # noqa: F401
-    Base.metadata.create_all(eng)
+    ensure_schema(eng)
     return sessionmaker(bind=eng, expire_on_commit=False)()
 
 

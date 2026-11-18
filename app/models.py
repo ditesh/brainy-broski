@@ -107,6 +107,7 @@ class PaperQuestion(Base):
     problem_id: Mapped[int] = mapped_column(ForeignKey("problem.id"))
     crop_paths: Mapped[list] = mapped_column(JSON, default=list)
     crop_boxes: Mapped[list] = mapped_column(JSON, default=list)
+    figure_paths: Mapped[list | None] = mapped_column(JSON(none_as_null=True), nullable=True)  # None = not extracted yet
     paper: Mapped[Paper] = relationship(back_populates="questions")
     problem: Mapped[Problem] = relationship()
 

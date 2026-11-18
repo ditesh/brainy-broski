@@ -19,8 +19,11 @@ Only report what is on the pages. Do not solve any questions."""
 ANALYSE_SYSTEM = """You are given an image of one maths olympiad question, cropped from a past paper.
 
 Return:
-- transcription: the full question in Markdown, with maths in LaTeX between $...$. Describe any \
-diagram in one short sentence in square brackets. Copy the wording faithfully.
+- transcription: the full question in Markdown, with maths in LaTeX between $...$ (display maths \
+between $$...$$). Copy the wording exactly, including any notes. Where the question has a diagram, \
+picture, graph or table drawn as a picture, put [[figure]] on its own line at that spot instead of \
+describing it (one marker per picture, in reading order). Put multiple-choice options on separate \
+lines as "(A) ...", "(B) ..." and so on. Do not include the question number.
 - answer_type: "mcq" if the question offers lettered choices (A-E); "fraction" if the answer is \
 naturally a fraction or decimal; "integer" if it is a whole number; "text" otherwise.
 - tags: one to three technique tags, chosen ONLY from the list given in the message, that a \

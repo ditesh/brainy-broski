@@ -27,6 +27,23 @@ def md(text: str | None) -> Markup:
 
 
 TEMPLATES.env.filters["md"] = md
+FIGURE_MARK = re.compile(r"^\s*\[\[figure\]\]\s*$", re.M | re.I)
+
+
+def question_html(text: str | None, figure_paths: list | None) -> Markup:
+    """Question text with its pictures placed at [[figure]] markers; spare pictures go at the end."""
+    figs = [f'<img class="qfig" src="/files/{escape(p)}" alt="Diagram for this question">' for p in (figure_paths or [])]
+    pieces = FIGURE_MARK.split(text or "")
+    html = []
+    for i, piece in enumerate(pieces):
+        html.append(str(md(piece)))
+        if i < len(pieces) - 1 and figs:
+            html.append(figs.pop(0))
+    html.extend(figs)
+    return Markup("".join(html))
+
+
+TEMPLATES.env.globals["question_html"] = question_html
 
 
 def render(request: Request, name: str, status_code: int = 200, **ctx):

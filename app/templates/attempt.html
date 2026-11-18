@@ -11,7 +11,7 @@
 </nav>
 <div class="card">
   <p><strong>Question {{ current }}</strong> <span class="muted">· {{ pq.points }} point{{ "s" if pq.points != 1 }}</span></p>
-  {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ current }}">{% endfor %}
+  {% include "_question.html" %}
 </div>
 <form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack" style="max-width:none">
   <input type="hidden" name="q" value="{{ current }}">

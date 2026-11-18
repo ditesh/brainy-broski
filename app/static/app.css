@@ -106,3 +106,12 @@ svg .baseline { stroke: var(--line); }
 .alert.success { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: color-mix(in srgb, var(--good-bg) 70%, var(--card)); }
 .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; max-width: min(92vw, 420px);
          background: var(--fg); color: var(--bg); padding: 12px 18px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.qtext { font-size: 1.12rem; line-height: 1.65; }
+.qtext p { margin: .5em 0; }
+.qtext .katex { font-size: 1.08em; }
+.qtext .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.qfig { display: block; max-width: 100%; height: auto; margin: 10px auto; border-radius: 10px; background: #fff; padding: 6px; }
+details.original { margin-top: 8px; }
+details.original summary { font-size: .9rem; color: var(--muted); min-height: 32px; }
+.qtext.preview { border: 2px dashed var(--line); border-radius: 12px; padding: 8px 12px; }
+textarea { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .95rem; }

@@ -11,6 +11,13 @@
             hx-target="#q{{ q.id }}" hx-swap="outerHTML">Remove this picture</button>
     {% endif %}
   {% endfor %}
+  <form hx-post="/parent/questions/{{ q.id }}/text" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="stack" style="max-width:none;margin-top:8px">
+    <label>Question text (what your child sees — fix anything that's wrong; [[figure]] marks where a picture goes)
+      <textarea name="transcription" rows="5">{{ q.problem.transcription }}</textarea>
+    </label>
+    <div class="qtext preview">{{ question_html(q.problem.transcription, q.figure_paths) }}</div>
+    <button>Save text</button>
+  </form>
   {% if error %}{{ alert("error", "Hmm, that didn't work", error) }}{% endif %}
   <form hx-post="/parent/questions/{{ q.id }}" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row" style="margin-top:8px">
     <label style="flex:1 1 120px">Answer <input name="answer" value="{{ q.problem.answer }}"></label>

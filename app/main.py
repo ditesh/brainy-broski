@@ -13,10 +13,18 @@ from app.config import Settings, get_settings
 def create_app(settings: Settings | None = None, session_factory: sessionmaker | None = None) -> FastAPI:
     settings = settings or get_settings()
     if session_factory is None:
+        settings.data_dir.mkdir(parents=True, exist_ok=True)
         engine = dbmod.make_engine(settings.database_url)
+        dbmod.ensure_schema(engine)
         session_factory = sessionmaker(bind=engine, expire_on_commit=False)
     dbmod.configure(session_factory)
     _reset_interrupted_jobs(session_factory)
+    from app.importer.pipeline import backfill_figures
+    try:
+        backfill_figures(session_factory, settings)
+    except Exception:  # never block startup on this
+        import logging
+        logging.getLogger(__name__).exception("figure backfill failed")
     app = FastAPI(title="Olympiad Practice")
     app.state.settings = settings
     app.state.session_factory = session_factory

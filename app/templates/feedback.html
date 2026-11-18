@@ -1,22 +1,7 @@
 {% extends "base.html" %}
-{% block head %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-{% endblock %}
 {% block content %}
 <h1>Feedback · {{ attempt.paper.title }}</h1>
 <p><a href="/attempts/{{ attempt.id }}/results">← Back to results</a></p>
 {% if not cards %}<p class="muted">Nothing to go over — well done! 🌟</p>{% endif %}
 {% for c in cards %}{% include "_feedback_card.html" %}{% endfor %}
-{% endblock %}
-{% block scripts %}
-<script>
-function renderMath(el) {
-  if (window.renderMathInElement) renderMathInElement(el, {delimiters: [
-    {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}], throwOnError: false});
-}
-window.addEventListener("load", function () { renderMath(document.body); });
-document.body.addEventListener("htmx:afterSwap", function (e) { renderMath(e.target); });
-</script>
 {% endblock %}

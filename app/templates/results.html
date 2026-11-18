@@ -25,7 +25,7 @@
       {% else %}<span class="bad">✗ Not quite</span>{% endif %}
     </div>
     {% if r.correct_first == false %}
-      {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ q.number }}">{% endfor %}
+      {% with pq = q %}{% include "_question.html" %}{% endwith %}
       <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
       {% if r.retry_answer is none and is_owner %}
         <form method="post" action="/responses/{{ r.id }}/retry" class="row">

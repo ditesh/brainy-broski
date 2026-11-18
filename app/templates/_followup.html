@@ -1,7 +1,7 @@
 {% set pq = f.pq %}{% set done = f.done %}
 <div class="followup card" id="fu{{ r.id }}-{{ pq.id }}">
   <p style="margin-top:0"><strong>🎯 Try one like it</strong> <span class="muted">· {{ pq.paper.title }} Q{{ pq.number }}</span></p>
-  {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Practice question">{% endfor %}
+  {% include "_question.html" %}
   {% if done %}
     {% if done.correct %}
       <p class="good">Correct! 🎉 ({{ done.answer }})</p>

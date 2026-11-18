@@ -12,7 +12,8 @@ from app.answers import normalise
 from app.config import Settings
 from app.importer.dedupe import link_duplicates
 from app.models import FollowupResponse, ImportStatus, Paper, PaperQuestion, Problem, Response, SourcePdf
-from app.pdf.render import CropBox, crop_box, crop_questions, find_anchors, has_text_layer, render_pages
+from app.pdf.render import (CropBox, crop_box, crop_questions, extract_figures, find_anchors, has_text_layer,
+                            render_pages)
 from app.techniques import TECHNIQUES
 
 log = logging.getLogger(__name__)
@@ -140,10 +141,11 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
                 db.add(problem)
                 db.flush()
                 part, points = _points_for(section, n)
+                figs = _figures(pdf, [b.as_list() for b in boxes], out_dir, n, settings) if text_layer else []
                 db.add(PaperQuestion(
                     paper_id=paper.id, number=n, part=part, points=points, problem_id=problem.id,
                     crop_paths=[str(b.path.relative_to(settings.data_dir)) for b in boxes],
-                    crop_boxes=[b.as_list() for b in boxes]))
+                    crop_boxes=[b.as_list() for b in boxes], figure_paths=figs))
                 db.commit()
         link_duplicates(db, src.id)
         src.status = ImportStatus.done
@@ -153,3 +155,31 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
         src = db.get(SourcePdf, source_pdf_id)
         src.status, src.error = ImportStatus.failed, _plain(e)
     db.commit()
+
+
+def _figures(pdf: Path, boxes: list[list], out_dir: Path, n: int, settings: Settings) -> list[str]:
+    try:
+        found = extract_figures(pdf, boxes, out_dir, f"q{n:03}")
+    except Exception:
+        log.exception("figure extraction failed for question %s", n)
+        return []
+    return [str(p.relative_to(settings.data_dir)) for p in found]
+
+
+def backfill_figures(session_factory, settings: Settings) -> int:
+    """Extract figures for questions imported before figure support existed. Returns how many were done."""
+    db = session_factory()
+    done = 0
+    try:
+        for q in db.query(PaperQuestion).filter(PaperQuestion.figure_paths.is_(None)).all():
+            pdf = Path(q.paper.source_pdf.path)
+            if not pdf.exists() or not q.crop_boxes or not has_text_layer(pdf):
+                q.figure_paths = []
+            else:
+                out_dir = settings.data_dir / "crops" / str(q.paper.source_pdf_id) / q.paper.category
+                q.figure_paths = _figures(pdf, q.crop_boxes, out_dir, q.number, settings)
+            done += 1
+        db.commit()
+    finally:
+        db.close()
+    return done

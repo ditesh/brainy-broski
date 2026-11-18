@@ -39,8 +39,11 @@ next.
 **Anti-goals: would be a failure even if it "works"**
 - **Confidently wrong explanations.** Any explanation that doesn't reach the official
   answer must not be shown as truth.
-- **Retyped questions with broken maths or missing diagrams.** He must always see the
-  original rendering.
+- **Questions with broken maths or missing diagrams.** *(Revised 2026-11-18 at the parent's request.)*
+  Questions are shown as Claude's clean text (Markdown + LaTeX, rendered with KaTeX) with the
+  diagrams cut from the PDF placed at `[[figure]]` markers. The original crop is always one tap away
+  ("See the original"), the parent can correct the text on the review screen, and a question with no
+  text falls back to the crop.
 - **Making him type his working.** Working stays on paper.
 - **Exposing answer keys to the child account** before he has submitted.
 - **Making the papers publicly accessible.** They are copyrighted; the site is private.
