@@ -35,7 +35,8 @@ def db(session_factory):
 
 @pytest.fixture
 def fake_ai():
-    return None  # filled in by Task 5
+    from tests.support.fake_ai import FakeAI
+    return FakeAI()
 
 
 @pytest.fixture
@@ -50,6 +51,9 @@ def app(settings, session_factory, fake_ai):
         finally:
             s.close()
     application.dependency_overrides[get_db] = _db
+    from app.ai.client import get_ai
+    application.dependency_overrides[get_ai] = lambda: fake_ai
+    application.state.ai = fake_ai
     return application
 
 
