@@ -2,12 +2,19 @@
 {% block content %}
 <h1>Hi {{ user.display_name }}! 👋</h1>
 <p class="hello">Pick a challenge and show those problems who's boss.</p>
-<section class="card wonder" aria-labelledby="wonder-title">
-  <p class="wonder-label">🌟 Today's maths wonder</p>
+{% if not wonder_hidden %}
+<section class="card wonder" id="wonder" aria-labelledby="wonder-title">
+  <div class="row wonder-head">
+    <p class="wonder-label">🌟 Today's maths wonder</p>
+    <form method="post" action="/wonder/dismiss" hx-post="/wonder/dismiss" hx-target="#wonder" hx-swap="outerHTML">
+      <button class="link wonder-close" aria-label="Hide today's maths wonder until tomorrow">✕ Hide for today</button>
+    </form>
+  </div>
   <h2 id="wonder-title">{{ today_fact.title }}</h2>
   <div>{{ today_fact.body | md }}</div>
   <details><summary>Why does it work?</summary><div>{{ today_fact.why | md }}</div></details>
 </section>
+{% endif %}
 {% if in_progress %}
 <h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}

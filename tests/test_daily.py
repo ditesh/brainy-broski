@@ -102,3 +102,33 @@ def test_numeric_claims_hold():
 
 def test_dropped_symbols_not_used():
     assert not {"∠", "!", "%"} & {s.glyph for s in SYMBOLS}
+
+
+def _fix_day(monkeypatch, d):
+    import app.daily
+    monkeypatch.setattr(app.daily, "local_today", lambda tz: d)
+
+
+def test_dismiss_hides_wonder_for_the_day(child_client, junior_paper, monkeypatch):
+    _fix_day(monkeypatch, date(2026, 11, 18))
+    assert "Today's maths wonder" in child_client.get("/practice").text
+    r = child_client.post("/wonder/dismiss", headers={"HX-Request": "true"})
+    assert r.status_code == 200 and r.text == ""
+    assert "Today's maths wonder" not in child_client.get("/practice").text
+
+
+def test_wonder_returns_next_day(child_client, junior_paper, monkeypatch):
+    _fix_day(monkeypatch, date(2026, 11, 18))
+    child_client.post("/wonder/dismiss")
+    _fix_day(monkeypatch, date(2026, 11, 19))
+    assert "Today's maths wonder" in child_client.get("/practice").text
+
+
+def test_dismiss_without_js_redirects(child_client, junior_paper):
+    r = child_client.post("/wonder/dismiss", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/practice"
+
+
+def test_dismiss_needs_login(client):
+    r = client.post("/wonder/dismiss", follow_redirects=False)
+    assert r.status_code in (303, 401, 403)

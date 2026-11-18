@@ -58,8 +58,21 @@ def practice_home(request: Request, contest: str = "", level: str = "", user: Us
     shown = [p for p in papers if p.source_pdf.contest == contest and p.category == level]
     in_progress = [a for a in attempts if a.submitted_at is None]
     done = [a for a in attempts if a.submitted_at is not None][:10]
-    return render(request, "practice_home.html", contests=contests, contest=contest, levels=choices,
+    from app import daily
+    today = daily.local_today(request.app.state.settings.timezone).isoformat()
+    return render(request, "practice_home.html", wonder_hidden=request.session.get("wonder_hidden") == today,
+                  contests=contests, contest=contest, levels=choices,
                   level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user))
+
+
+@router.post("/wonder/dismiss")
+def wonder_dismiss(request: Request, user: User = Depends(require_user)):
+    from fastapi.responses import HTMLResponse
+    from app import daily
+    request.session["wonder_hidden"] = daily.local_today(request.app.state.settings.timezone).isoformat()
+    if request.headers.get("HX-Request"):
+        return HTMLResponse("")
+    return RedirectResponse("/practice", status_code=303)
 
 
 @router.post("/practice/start")
