@@ -11,7 +11,10 @@ from app.uploads import UnsupportedImage, new_upload_token, store_photo
 
 
 @pytest.fixture
-def miss_response(db, junior_paper, child):
+def miss_response(db, junior_paper, child, fake_ai):
+    from app.ai.schemas import Diagnosis, ReferenceSolution
+    fake_ai.respond(ReferenceSolution, lambda c: ReferenceSolution(steps=["x"], final_answer="18"))
+    fake_ai.respond(Diagnosis, lambda c: Diagnosis(label="careless", hint="h", explanation="e"))
     a = start_attempt(db, child, junior_paper, "practice", [1, 2])
     save_answer(db, a, 1, "81")
     submit(db, a)

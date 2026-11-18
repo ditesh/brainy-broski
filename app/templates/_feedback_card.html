@@ -1,0 +1,44 @@
+{% set r = c.r %}{% set q = c.q %}{% set d = c.d %}
+<div class="card" id="fb{{ r.id }}"
+     {% if r.diagnosis_status.value == "pending" %}hx-get="/responses/{{ r.id }}/feedback" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+  <div class="row" style="justify-content:space-between">
+    <strong>Question {{ q.number }}</strong>
+    {% if c.label and r.diagnosis_status.value != "pending" %}<span class="chip {{ c.label }}">{{ c.label_text[c.label] }}</span>{% endif %}
+  </div>
+  {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Question {{ q.number }}">{% endfor %}
+  <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
+
+  {% if r.diagnosis_status.value == "pending" %}
+    <p>Looking at your working… this takes about a minute.</p>
+  {% elif r.diagnosis_status.value == "none" %}
+    <p><a class="button" href="/attempts/{{ r.attempt_id }}/results#r{{ r.id }}">Finish this question on the results page</a></p>
+  {% elif d.get("unverified") or not c.problem.verified %}
+    <p>This one's tricky. Go through it with {{ c.parent_name }}.</p>
+  {% else %}
+    {% if c.label in ("careless", "careless_self_corrected") %}
+      {% if d.wrong_step %}<p>Here's where it slipped: <strong>“{{ d.wrong_step }}”</strong></p>{% endif %}
+      {% if d.explanation %}<div>{{ d.explanation | md }}</div>{% endif %}
+    {% elif c.label == "technique" %}
+      {% if d.hint %}<p><strong>Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
+    {% else %}
+      <p>Not sure what went wrong here. Go through it with {{ c.parent_name }}.</p>
+      {% if d.hint %}<p><strong>Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
+    {% endif %}
+    <details>
+      <summary>Show full solution</summary>
+      {% if c.label == "technique" and d.explanation %}<div>{{ d.explanation | md }}</div>{% endif %}
+      <div>{{ c.problem.reference_solution | md }}</div>
+      <p>Answer: <strong>{{ c.problem.answer }}</strong></p>
+    </details>
+    {% if c.technique %}
+    <div class="card" style="margin-top:12px">
+      <p style="margin-top:0"><strong>Technique: {{ c.technique.name }}</strong></p>
+      <p>{{ c.technique.description }}</p>
+      {% for f in c.followups %}{% include "_followup.html" %}{% endfor %}
+    </div>
+    {% endif %}
+  {% endif %}
+  {% if c.is_parent and r.diagnosis_status.value != "pending" %}
+    <form method="post" action="/parent/responses/{{ r.id }}/rediagnose"><button class="link">Check this one again</button></form>
+  {% endif %}
+</div>
