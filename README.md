@@ -11,8 +11,10 @@ Design: `docs/superpowers/specs/2026-11-18-olympiad-practice-design.md`
 
 ```sh
 python3.12 -m venv .venv && .venv/bin/pip install -e ".[dev]"
-export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
-export ANTHROPIC_API_KEY=sk-ant-...        # needed for importing and feedback
+cp .env.example .env
+echo "SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')" >> .env
+# then open .env and paste your Anthropic key after ANTHROPIC_API_KEY=
+# (delete the empty SECRET_KEY= line at the top)
 .venv/bin/python -m app.cli init-db
 .venv/bin/python -m app.cli seed-techniques
 .venv/bin/python -m app.cli create-user dad --role parent --display-name Dad

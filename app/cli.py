@@ -1,6 +1,7 @@
 import argparse
 import getpass
 import sqlite3
+import sys
 from datetime import date
 
 from sqlalchemy.orm import sessionmaker
@@ -33,6 +34,17 @@ def main(argv=None):
     cu.add_argument("--display-name", required=True)
     cu.add_argument("--password", help="omit to be prompted")
     a = p.parse_args(argv)
+    from pydantic import ValidationError
+    try:
+        get_settings()
+    except ValidationError as e:
+        missing = [str(err["loc"][0]).upper() for err in e.errors() if err["type"] == "missing"]
+        for name in missing:
+            print(f"{name} is not set. Add it to a .env file in the project folder "
+                  f"(see README) or export it in this terminal.", file=sys.stderr)
+        if not missing:
+            print(f"Invalid settings: {e}", file=sys.stderr)
+        sys.exit(1)
     if a.cmd == "backup":
         backup()
         return

@@ -1,0 +1,22 @@
+Metadata-Version: 2.4
+Name: olympiad-practice
+Version: 0.1.0
+Requires-Python: >=3.12
+Requires-Dist: fastapi>=0.163
+Requires-Dist: uvicorn[standard]
+Requires-Dist: jinja2
+Requires-Dist: sqlalchemy>=2.1
+Requires-Dist: pymupdf>=2.1
+Requires-Dist: pillow
+Requires-Dist: anthropic>=2.10
+Requires-Dist: pydantic>=2.14
+Requires-Dist: pydantic-settings
+Requires-Dist: argon2-cffi
+Requires-Dist: qrcode[pil]
+Requires-Dist: python-multipart
+Requires-Dist: itsdangerous
+Requires-Dist: markdown-it-py
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: httpx; extra == "dev"
+Requires-Dist: freezegun; extra == "dev"

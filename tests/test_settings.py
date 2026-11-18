@@ -30,3 +30,24 @@ def test_backup_command_copies_database(tmp_path, monkeypatch):
     backups = list((tmp_path / "backups").glob("app-*.db"))
     assert len(backups) == 1
     assert sqlite3.connect(backups[0]).execute("select x from t").fetchone() == (42,)
+
+
+def test_errors_never_echo_secret_values(monkeypatch):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-very-secret-value")
+    with pytest.raises(ValidationError) as e:
+        Settings(_env_file=None)
+    assert "very-secret" not in str(e.value)
+
+
+def test_cli_explains_missing_secret_key(monkeypatch, capsys):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.chdir("/")  # no .env file here
+    from app.config import get_settings
+    get_settings.cache_clear()
+    from app.cli import main
+    with pytest.raises(SystemExit) as e:
+        main(["init-db"])
+    get_settings.cache_clear()
+    assert e.value.code == 1
+    assert "SECRET_KEY is not set" in capsys.readouterr().err
