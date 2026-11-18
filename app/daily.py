@@ -30,9 +30,6 @@ SYMBOLS = [
     Symbol("θ", "theta (angle)"),
     Symbol("≈", "approximately", 46, 45),
     Symbol("±", "plus or minus"),
-    Symbol("∠", "angle"),
-    Symbol("!", "factorial", 46, 48),
-    Symbol("%", "percent", 40, 46),
     Symbol("e", "Euler's number", 48, 44),
 ]
 

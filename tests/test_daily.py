@@ -98,3 +98,7 @@ def test_numeric_claims_hold():
     assert comb(10, 2) == 45 and 6 * 3 // 2 == 9
     assert 1 + 2 + 4 + 7 + 14 == 28
     assert {k * k % 10 for k in range(100)} == {0, 1, 4, 5, 6, 9}
+
+
+def test_dropped_symbols_not_used():
+    assert not {"∠", "!", "%"} & {s.glyph for s in SYMBOLS}
