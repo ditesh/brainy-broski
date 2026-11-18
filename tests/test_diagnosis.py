@@ -180,3 +180,10 @@ def test_parent_can_rediagnose(parent_client, db, fake_ai, response):
 
 def test_child_cannot_rediagnose(child_client, response):
     assert child_client.post(f"/parent/responses/{response.id}/rediagnose").status_code == 403
+
+
+def test_unexpected_error_marks_failed_not_stuck(db, settings, fake_ai, response):
+    fake_ai.add(ReferenceSolution, solved()).add(Diagnosis, RuntimeError("weird"))
+    diagnose_response(db, response.id, fake_ai, settings)
+    db.refresh(response)
+    assert response.diagnosis_status == DiagnosisStatus.failed and response.label == Label.unsure

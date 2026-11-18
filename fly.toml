@@ -1,0 +1,32 @@
+# Fly.io config. Run `fly launch --no-deploy --copy-config` and pick your own app name.
+app = "olympiad-practice"
+primary_region = "sin"
+
+[build]
+
+[env]
+  DATA_DIR = "/data"
+  DATABASE_URL = "sqlite:////data/app.db"
+  SECURE_COOKIES = "true"
+
+[[mounts]]
+  source = "data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  path = "/health"
+  timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

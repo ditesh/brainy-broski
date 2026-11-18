@@ -1,0 +1,9 @@
+.venv
+data
+tests
+docs
+.git
+.superpowers
+__pycache__
+*.pyc
+.env

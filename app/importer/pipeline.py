@@ -5,7 +5,7 @@ from pathlib import Path
 import pymupdf as fitz
 from sqlalchemy.orm import Session
 
-from app.ai.client import AIClient, AIError
+from app.ai.client import AIClient
 from app.ai.prompts import ANALYSE_SYSTEM, STRUCTURE_SYSTEM
 from app.ai.schemas import PageBoxes, PdfStructure, QuestionAnalysis, Section
 from app.answers import normalise
@@ -37,8 +37,10 @@ def detect_structure(source_pdf_id: int, db: Session, ai: AIClient, settings: Se
                                f"This PDF has {len(pages)} pages. Describe its structure.", "low")
         src.structure = result.model_dump(mode="json")
         src.status = ImportStatus.needs_review
-    except AIError as e:
-        log.warning("structure detection failed: %s", e)
+    except Exception as e:  # never leave the import stuck in "running"
+        log.exception("structure detection failed")
+        db.rollback()
+        src = db.get(SourcePdf, source_pdf_id)
         src.status, src.error = ImportStatus.failed, f"Could not read the paper's layout: {e}"
     db.commit()
 
@@ -129,8 +131,8 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
                 db.commit()
         link_duplicates(db, src.id)
         src.status = ImportStatus.done
-    except AIError as e:
-        log.warning("import failed: %s", e)
+    except Exception as e:  # never leave the import stuck in "running"
+        log.exception("import failed")
         db.rollback()
         src = db.get(SourcePdf, source_pdf_id)
         src.status, src.error = ImportStatus.failed, f"Import stopped: {e}"

@@ -51,6 +51,14 @@ def _diagnosis_text(r: Response, problem: Problem, has_photo: bool) -> str:
 
 
 def diagnose_response(db: Session, response_id: int, ai: AIClient, settings: Settings) -> None:
+    try:
+        _diagnose(db, response_id, ai, settings)
+    except Exception:  # never leave a card spinning forever
+        log.exception("diagnosis crashed for response %s", response_id)
+        _mark_failed(db, response_id)
+
+
+def _diagnose(db: Session, response_id: int, ai: AIClient, settings: Settings) -> None:
     r = db.get(Response, response_id)
     if r is None:
         return
@@ -88,6 +96,14 @@ def _run(app: FastAPI, response_id: int) -> None:
         diagnose_response(db, response_id, app.state.ai, app.state.settings)
     finally:
         db.close()
+
+
+def _mark_failed(db: Session, response_id: int) -> None:
+    db.rollback()
+    r = db.get(Response, response_id)
+    if r is not None:
+        r.label, r.diagnosis_status = Label.unsure, DiagnosisStatus.failed
+        db.commit()
 
 
 def enqueue_diagnosis(background: BackgroundTasks, app: FastAPI, db: Session, response: Response) -> None:

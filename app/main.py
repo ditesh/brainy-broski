@@ -21,7 +21,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.state.session_factory = session_factory
 
     app.add_middleware(SessionMiddleware, secret_key=settings.secret_key, same_site="lax",
-                       https_only=False, max_age=60 * 60 * 24 * 30)
+                       https_only=settings.secure_cookies, max_age=60 * 60 * 24 * 30)
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
     from app.auth import NotLoggedIn, router as auth_router

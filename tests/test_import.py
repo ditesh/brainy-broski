@@ -123,3 +123,16 @@ def test_scanned_pdf_uses_ai_boxes(db, settings, fake_ai, tmp_path):
     run_import(s.id, ["Junior"], db, fake_ai, settings)
     q = db.query(PaperQuestion).one()
     assert q.problem.answer == "7" and q.points == 1 and (settings.data_dir / q.crop_paths[0]).exists()
+
+
+def test_unexpected_error_in_structure_marks_failed(db, settings, fake_ai, src):
+    fake_ai.add(PdfStructure, RuntimeError("weird"))
+    detect_structure(src.id, db, fake_ai, settings)
+    assert src.status == ImportStatus.failed and "weird" in src.error
+
+
+def test_unexpected_error_in_import_marks_failed(db, settings, fake_ai, src):
+    fake_ai.add(QuestionAnalysis, RuntimeError("weird"))
+    run_import(src.id, ["Junior"], db, fake_ai, settings)
+    db.refresh(src)
+    assert src.status == ImportStatus.failed

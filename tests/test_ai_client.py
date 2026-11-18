@@ -72,3 +72,10 @@ def test_tags_capped_at_three():
     q = QuestionAnalysis(transcription="x", answer_type="integer",
                          tags=["parity", "algebra", "areas", "logic"])
     assert q.tags == ["parity", "algebra", "areas"]
+
+
+def test_missing_api_key_is_a_clear_ai_error(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_AUTH_TOKEN", raising=False)
+    with pytest.raises(AIError, match="API key"):
+        AnthropicAIClient(None, "m").structured(ReferenceSolution, "s", [], "t", "low")

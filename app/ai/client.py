@@ -47,6 +47,10 @@ class AnthropicAIClient:
             )
         except anthropic.APIError as e:  # includes connection, status and timeout errors
             raise AIError(str(e)) from e
+        except TypeError as e:  # raised by the SDK when no credentials are configured
+            if "authentication" in str(e).lower():
+                raise AIError("The Claude API key is not set (ANTHROPIC_API_KEY).") from e
+            raise
         if resp.stop_reason == "refusal":
             raise AIRefusal("Claude declined this request")
         if resp.parsed_output is None:
