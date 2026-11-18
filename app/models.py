@@ -123,6 +123,7 @@ class Attempt(Base):
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    redo_of_id: Mapped[int | None] = mapped_column(ForeignKey("attempt.id"), nullable=True)
     paper: Mapped[Paper] = relationship()
     user: Mapped[User] = relationship()
     responses: Mapped[list["Response"]] = relationship(back_populates="attempt")

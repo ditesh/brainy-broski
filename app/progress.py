@@ -19,10 +19,23 @@ def _submitted_responses(db: Session, user: User) -> list[Response]:
 def paper_history(db: Session, user: User) -> list[dict]:
     attempts = (db.query(Attempt).filter(Attempt.user_id == user.id, Attempt.submitted_at.isnot(None))
                 .order_by(Attempt.submitted_at.desc()).all())
-    return [{"id": a.id, "date": a.submitted_at.date(), "title": a.paper.title, "score": a.score,
+    tries: Counter = Counter()
+    kind: dict[int, str] = {}
+    for a in reversed(attempts):
+        if a.redo_of_id is not None:
+            kind[a.id] = "Redo of misses"
+        else:
+            tries[a.paper_id] += 1
+            kind[a.id] = "" if tries[a.paper_id] == 1 else _ordinal(tries[a.paper_id]) + " try"
+    return [{"id": a.id, "kind": kind[a.id], "date": a.submitted_at.date(), "title": a.paper.title, "score": a.score,
              "max_score": a.max_score, "questions": len(a.question_numbers),
              "minutes": max(1, round((a.submitted_at - a.started_at).total_seconds() / 60))}
             for a in attempts]
+
+
+def _ordinal(n: int) -> str:
+    suffix = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
 
 
 def _labelled_misses(db: Session, user: User) -> list[tuple[datetime, Label, Response]]:
@@ -65,9 +78,13 @@ def _tags(problem: Problem, extra: str | None = None) -> set[str]:
 def technique_table(db: Session, user: User, recent_days: int = 30) -> list[dict]:
     cutoff = utcnow() - timedelta(days=recent_days)
     stats: dict[str, dict] = defaultdict(lambda: {"attempts": 0, "misses": 0, "recent_misses": 0})
-    for r in _submitted_responses(db, user):
-        if r.correct_first is None:
-            continue
+    # Each problem counts once, from the first time he answered it: retakes and redos would
+    # otherwise count the same miss again and flag a technique on their own.
+    first: dict[int, Response] = {}
+    for r in sorted(_submitted_responses(db, user), key=lambda r: (r.attempt.started_at, r.id)):
+        if r.correct_first is not None:
+            first.setdefault(r.paper_question.problem_id, r)
+    for r in first.values():
         extra = (r.diagnosis or {}).get("technique_tag") if r.correct_first is False else None
         for t in _tags(r.paper_question.problem, extra):
             s = stats[t]

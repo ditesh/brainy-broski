@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.auth import require_user
 from app.db import get_db
 from app.models import Attempt, Paper, Response, Role, SourcePdf, User
-from app.practice.service import (deadline, is_expired, misses, response_for, save_answer, start_attempt,
-                                  submit, submit_retry)
+from app.practice.service import (deadline, is_expired, misses, paper_status, response_for, save_answer,
+                                  start_attempt, start_redo, submit, submit_retry)
 from app.web import render
 
 router = APIRouter()
@@ -49,7 +49,7 @@ def practice_home(request: Request, category: str = "Junior", user: User = Depen
     in_progress = [a for a in attempts if a.submitted_at is None]
     done = [a for a in attempts if a.submitted_at is not None][:10]
     return render(request, "practice_home.html", grouped=grouped, categories=categories, category=category,
-                  in_progress=in_progress, done=done)
+                  in_progress=in_progress, done=done, status=paper_status(db, user))
 
 
 @router.post("/practice/start")
@@ -129,7 +129,17 @@ def attempt_results(attempt_id: int, request: Request, user: User = Depends(requ
     pct = (a.score / a.max_score) if a.max_score else 0
     stars = 3 if pct >= 0.9 else 2 if pct >= 0.6 else 1 if pct >= 0.3 else 0
     return render(request, "results.html", a=a, rows=rows, misses=misses(a), is_owner=a.user_id == user.id,
-                  stars=stars)
+                  stars=stars, redo_count=sum(1 for r in a.responses if r.correct_first is False))
+
+
+@router.post("/attempts/{attempt_id}/redo")
+def attempt_redo(attempt_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    a = get_attempt(db, attempt_id, user)
+    try:
+        redo = start_redo(db, a)
+    except ValueError:
+        raise HTTPException(400, "There are no misses to redo on this paper.")
+    return RedirectResponse(f"/attempts/{redo.id}?q={redo.question_numbers[0]}", status_code=303)
 
 
 @router.post("/responses/{response_id}/retry")

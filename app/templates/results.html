@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ a.paper.title }}</h1>
+<h1>{{ a.paper.title }}{% if a.redo_of_id %} <span class="chip">🔁 Redo of misses</span>{% endif %}</h1>
 <div class="card scorecard" {% if stars == 3 %}data-confetti{% endif %}>
   <div class="stars" aria-label="{{ stars }} of 3 stars">{% for i in range(3) %}<span class="star{% if i < stars %} on{% endif %}">★</span>{% endfor %}</div>
   <div class="big">{{ a.score }} / {{ a.max_score }}</div>
@@ -47,6 +47,13 @@
   </div>
 {% endfor %}
 {% if misses %}<p><a class="button" href="/attempts/{{ a.id }}/feedback">All feedback for this paper</a></p>{% endif %}
+{% if redo_count and not open_misses and is_owner %}
+<div class="card">
+  <h2>🔁 Redo my misses</h2>
+  <p>Read the feedback first, then come back in a week or so and try just the {{ redo_count }} you missed. Getting them right later is how the tricks stick.</p>
+  <form method="post" action="/attempts/{{ a.id }}/redo"><button class="primary">Redo my misses</button></form>
+</div>
+{% endif %}
 {% endblock %}
 {% block scripts %}
 {% if stars == 3 %}

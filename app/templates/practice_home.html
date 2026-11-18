@@ -6,7 +6,7 @@
 <h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}
   <div class="card row" style="justify-content:space-between">
-    <span>{{ a.paper.title }}{% if a.mode == "contest" %} · timed{% endif %} · {{ a.question_numbers | length }} questions</span>
+    <span>{{ a.paper.title }}{% if a.redo_of_id %} · redo of misses{% endif %}{% if a.mode == "contest" %} · timed{% endif %} · {{ a.question_numbers | length }} questions</span>
     <a class="button primary" href="/attempts/{{ a.id }}">Continue →</a>
   </div>
 {% endfor %}
@@ -27,7 +27,12 @@
   <h2>{{ contest }}</h2>
   {% for p in plist %}
   <details class="card paper-pick">
-    <summary>{{ p.title }}</summary>
+    {% set st = status.get(p.id) %}
+    <summary>{{ p.title }}{% if st %} <span class="chip done">✓ Done {% if st.days_ago == 0 %}today{% else %}{{ st.date.strftime("%d %b") }}{% endif %} · {{ st.score }} / {{ st.max_score }}</span>{% endif %}</summary>
+    {% if st and st.recent %}
+    <p class="note">🧠 You did this {% if st.days_ago == 0 %}today{% elif st.days_ago == 1 %}yesterday{% else %}{{ st.days_ago }} days ago{% endif %}, so you might remember some answers.
+      <a href="/attempts/{{ st.attempt_id }}/results">Redo just your misses</a> instead, or try a paper you haven't done.</p>
+    {% endif %}
     <form method="post" action="/practice/start" class="stack" style="margin-top:8px">
       <input type="hidden" name="paper_id" value="{{ p.id }}">
       <label>Which questions?
@@ -54,7 +59,7 @@
 <h2>🏁 Finished papers</h2>
 {% for a in done %}
   <div class="row card" style="justify-content:space-between">
-    <span>{{ a.paper.title }} · {{ a.score }} / {{ a.max_score }}</span>
+    <span>{{ a.paper.title }}{% if a.redo_of_id %} · redo of misses{% endif %} · {{ a.score }} / {{ a.max_score }}</span>
     <a href="/attempts/{{ a.id }}/results">Results</a>
   </div>
 {% endfor %}

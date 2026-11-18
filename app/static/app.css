@@ -61,6 +61,8 @@ form.inline { display: inline; }
         font-size: var(--fs-sm); font-weight: var(--fw-heavy); background: color-mix(in srgb, currentColor 12%, transparent); }
 .chip.careless, .chip.careless_self_corrected { color: var(--careless); }
 .chip.technique { color: var(--technique); }
+.chip.done { color: var(--good); font-size: var(--fs-xs); }
+.note { margin: 8px 0 0; color: var(--muted); font-size: var(--fs-sm); }
 .chip.unsure { color: var(--unsure); }
 .good { color: var(--good); font-weight: var(--fw-heavy); }
 .bad { color: var(--bad); font-weight: var(--fw-heavy); }
