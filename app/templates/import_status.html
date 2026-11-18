@@ -1,5 +1,24 @@
 {% extends "base.html" %}
+{% from "macros.html" import alert %}
+{% block back %}<a class="back" href="/parent">← Papers</a>{% endblock %}
 {% block content %}
 <h1>{{ src.contest }} {{ src.year }}</h1>
+<p class="muted">{{ src.filename }}</p>
+{% if error %}{{ alert("error", "Couldn't save that", error) }}{% endif %}
 <div id="status">{% include "_import_status_body.html" %}</div>
+{% if src.status.value not in ("pending", "running") %}
+<h2>Details</h2>
+<form method="post" action="/parent/import/{{ src.id }}/details" class="stack card">
+  <label>Contest
+    <select name="contest">
+      {% if src.contest not in contests %}<option selected>{{ src.contest }}</option>{% endif %}
+      {% for c in contests %}<option {% if c == src.contest %}selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Year <input type="number" name="year" value="{{ src.year }}" min="1990" max="{{ this_year + 1 }}" required></label>
+  <label>Time allowed (minutes, blank for no timer)
+    <input type="number" name="duration_min" value="{{ src.duration_min or '' }}" min="1" max="600" inputmode="numeric"></label>
+  <button>Save details</button>
+</form>
+{% endif %}
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "macros.html" import alert %}
+{% block back %}<a class="back" href="/parent">← Papers</a>{% endblock %}
 {% block content %}
 <h1>Add a paper</h1>
 <p class="muted">Upload the PDF with the questions and the answer key. The tool will find the questions; you check them before the paper is used for practice.</p>

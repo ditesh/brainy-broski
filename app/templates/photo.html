@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block back %}<a class="back" href="/attempts/{{ r.attempt_id }}/results">← Results</a>{% endblock %}
 {% block content %}
 <h1>Photo of your working</h1>
 <p>Question {{ r.paper_question.number }}. Take a clear photo of the working you wrote for this question.</p>

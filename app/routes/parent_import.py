@@ -43,10 +43,11 @@ def _english_categories(src: SourcePdf) -> list[str]:
     return seen
 
 
-def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int = 200):
+def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int = 200, error: str | None = None):
     papers = db.query(Paper).filter_by(source_pdf_id=src.id).all()
     return render(request, "import_status.html", status_code=status_code, src=src,
-                  categories=_english_categories(src), papers=papers)
+                  categories=_english_categories(src), papers=papers, contests=CONTESTS,
+                  this_year=date.today().year, error=error)
 
 
 @router.post("/parent/import")
@@ -154,3 +155,20 @@ def delete_paper(src_id: int, request: Request, user: User = Depends(require_par
         raise HTTPException(400, "This paper is still being imported. Wait for it to finish, then delete it.")
     delete_source(db, request.app.state.settings, src)
     return RedirectResponse("/parent", status_code=303)
+
+
+@router.post("/parent/import/{src_id}/details")
+def import_details(src_id: int, request: Request, contest: str = Form(...), year: int = Form(...),
+                   duration_min: str = Form(""), user: User = Depends(require_parent),
+                   db: Session = Depends(get_db)):
+    src = _get_src(db, src_id)
+    if contest not in CONTESTS and contest != src.contest:
+        return _status_page(request, db, src, status_code=400, error="Pick a contest from the list.")
+    if not 1990 <= year <= date.today().year + 1:
+        return _status_page(request, db, src, status_code=400, error="That year doesn't look right.")
+    minutes = int(duration_min) if duration_min.strip().isdigit() and int(duration_min) > 0 else None
+    src.contest, src.year, src.duration_min = contest, year, minutes
+    for p in src.papers:
+        p.duration_min = minutes
+    db.commit()
+    return RedirectResponse(f"/parent/import/{src.id}", status_code=303)

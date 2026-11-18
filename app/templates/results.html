@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block back %}{% if is_owner %}<a class="back" href="/practice">← All papers</a>{% else %}<a class="back" href="/progress?user={{ a.user_id }}">← Progress</a>{% endif %}{% endblock %}
 {% block content %}
 <h1>{{ a.paper.title }}{% if a.redo_of_id %} <span class="chip">🔁 Redo of misses</span>{% endif %}</h1>
 <div class="card scorecard" {% if stars == 3 %}data-confetti{% endif %}>

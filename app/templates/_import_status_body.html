@@ -19,10 +19,24 @@
            [{"label": "Add a different paper", "href": "/parent/import"}]) }}
   {% endif %}
 {% elif src.status.value == "done" %}
+  {% if papers | rejectattr("published") | list %}
   {{ alert("success", "Done!", "Check each paper, fix anything that looks wrong, then publish it.") }}
+  {% endif %}
 {% endif %}
 {% if papers %}
   <h2>Imported papers</h2>
-  <ul>{% for p in papers %}<li><a href="/parent/papers/{{ p.id }}/review">Review {{ p.category }}</a>{% if p.published %} (published){% endif %}</li>{% endfor %}</ul>
+  <ul>{% for p in papers %}<li><a href="/parent/papers/{{ p.id }}/review">Review {{ p.category }}</a>
+    {% if p.published %}<span class="chip">published</span>{% else %}<span class="chip unsure">needs checking</span>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% set imported = papers | map(attribute="category") | list %}
+{% set more = categories | reject("in", imported) | list %}
+{% if src.status.value == "done" and more %}
+  <h2>Import more levels</h2>
+  <form method="post" action="/parent/import/{{ src.id }}" class="stack">
+    {% for c in more %}
+      <label class="row check-row"><input type="checkbox" name="categories" value="{{ c }}" style="width:auto;min-height:0"> {{ c }}</label>
+    {% endfor %}
+    <button>Import these</button>
+  </form>
 {% endif %}
 </div>
