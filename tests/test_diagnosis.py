@@ -187,3 +187,33 @@ def test_unexpected_error_marks_failed_not_stuck(db, settings, fake_ai, response
     diagnose_response(db, response.id, fake_ai, settings)
     db.refresh(response)
     assert response.diagnosis_status == DiagnosisStatus.failed and response.label == Label.unsure
+
+
+def test_pending_message_without_photo_does_not_mention_working(child_client, db, parent, response):
+    response.diagnosis_status = DiagnosisStatus.pending
+    response.photo_path = None
+    db.commit()
+    html = child_client.get(f"/responses/{response.id}/feedback").text
+    assert "Looking at your working" not in html
+    assert "Working out what went wrong" in html
+
+
+def test_pending_message_with_photo_mentions_working(child_client, db, parent, response):
+    response.diagnosis_status = DiagnosisStatus.pending
+    response.photo_path = "photos/x.jpg"
+    db.commit()
+    assert "Looking at your working" in child_client.get(f"/responses/{response.id}/feedback").text
+
+
+def test_unsure_without_photo_explains_why(child_client, db, parent, response):
+    response.photo_path = None
+    _done(db, response, Label.unsure, diag(label="unsure").model_dump())
+    html = child_client.get(f"/responses/{response.id}/feedback").text
+    assert "Not sure what went wrong here" not in html
+    assert "without seeing your working" in html
+
+
+def test_unsure_with_photo_keeps_message(child_client, db, parent, response):
+    response.photo_path = "photos/x.jpg"
+    _done(db, response, Label.unsure, diag(label="unsure").model_dump())
+    assert "Not sure what went wrong here" in child_client.get(f"/responses/{response.id}/feedback").text

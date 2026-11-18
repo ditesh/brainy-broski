@@ -10,7 +10,11 @@
   <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
 
   {% if r.diagnosis_status.value == "pending" %}
+    {% if r.photo_path %}
     <p>🔎 Looking at your working… this takes about a minute.</p>
+    {% else %}
+    <p>🤔 Working out what went wrong with this one… this takes about a minute.</p>
+    {% endif %}
   {% elif r.diagnosis_status.value == "none" %}
     <p><a class="button" href="/attempts/{{ r.attempt_id }}/results#r{{ r.id }}">Finish this question on the results page</a></p>
   {% elif d.get("unverified") or not c.problem.verified %}
@@ -22,7 +26,11 @@
     {% elif c.label == "technique" %}
       {% if d.hint %}<p><strong>💡 Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
     {% else %}
+      {% if r.photo_path %}
       <p>Not sure what went wrong here. Go through it with {{ c.parent_name }}.</p>
+      {% else %}
+      <p>I can't tell where this one slipped without seeing your working. Try the hint, or go through it with {{ c.parent_name }}.</p>
+      {% endif %}
       {% if d.hint %}<p><strong>Hint:</strong></p><div>{{ d.hint | md }}</div>{% endif %}
     {% endif %}
     <details>
