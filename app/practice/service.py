@@ -72,6 +72,8 @@ def submit_retry(db: Session, response: Response, raw: str) -> Response:
         raise ValueError("Hand in the paper first.")
     if response.correct_first is not False or response.retry_answer is not None:
         raise ValueError("No retry available for this question.")
+    if not raw.strip():
+        raise ValueError("Type an answer first.")
     p = response.paper_question.problem
     response.retry_answer = raw.strip()
     response.correct_retry = is_correct(raw, p.answer, p.answer_type)

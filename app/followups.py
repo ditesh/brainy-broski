@@ -19,9 +19,15 @@ def _recently_answered(db: Session, user: User) -> set[int]:
     return {pid for (pid,) in attempted} | {pid for (pid,) in followed}
 
 
+def _in_open_attempts(db: Session, user: User) -> set[int]:
+    rows = (db.query(PaperQuestion.problem_id).join(Response, Response.paper_question_id == PaperQuestion.id)
+            .join(Attempt).filter(Attempt.user_id == user.id, Attempt.submitted_at.is_(None)).all())
+    return {pid for (pid,) in rows}
+
+
 def pick_followups(db: Session, user: User, response: Response, tag: str, n: int = 2) -> list[PaperQuestion]:
     missed = response.paper_question
-    skip = _recently_answered(db, user) | {missed.problem_id}
+    skip = _recently_answered(db, user) | _in_open_attempts(db, user) | {missed.problem_id}
     candidates = (db.query(PaperQuestion).join(Paper).filter(Paper.published.is_(True))
                   .order_by(PaperQuestion.id).all())
     by_problem: dict[int, PaperQuestion] = {}

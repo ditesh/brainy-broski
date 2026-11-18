@@ -92,6 +92,18 @@ def nudge_crop(pq_id: int, request: Request, dy0: float = Form(0), dy1: float = 
     return _card(request, db, q)
 
 
+@router.post("/parent/questions/{pq_id}/drop-image")
+def drop_image(pq_id: int, request: Request, index: int = Form(...), user: User = Depends(require_parent),
+               db: Session = Depends(get_db)):
+    q = _get_pq(db, pq_id)
+    if len(q.crop_paths) <= 1 or not 0 <= index < len(q.crop_paths):
+        return _card(request, db, q, status_code=400, error="A question needs at least one picture.")
+    q.crop_paths = [p for i, p in enumerate(q.crop_paths) if i != index]
+    q.crop_boxes = [b for i, b in enumerate(q.crop_boxes) if i != index]
+    db.commit()
+    return _card(request, db, q)
+
+
 @router.post("/parent/questions/{pq_id}/unlink")
 def unlink(pq_id: int, request: Request, user: User = Depends(require_parent), db: Session = Depends(get_db)):
     q = _get_pq(db, pq_id)

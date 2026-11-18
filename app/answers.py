@@ -21,6 +21,13 @@ def normalise(raw: str | None, answer_type: AnswerType) -> str | None:
             return None
         return str(int(s))
     if answer_type == AnswerType.fraction:
+        mixed = re.fullmatch(r"(-?)(\d+)\s+(\d+)\s*/\s*(\d+)", s)
+        if mixed:
+            sign, whole, num, den = mixed.groups()
+            if int(den) == 0:
+                return None
+            value = int(whole) + Fraction(int(num), int(den))
+            return str(-value if sign else value)
         s = re.sub(r"\s", "", s)
         try:
             return str(Fraction(s))

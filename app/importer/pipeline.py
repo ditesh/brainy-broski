@@ -11,7 +11,7 @@ from app.ai.schemas import PageBoxes, PdfStructure, QuestionAnalysis, Section
 from app.answers import normalise
 from app.config import Settings
 from app.importer.dedupe import link_duplicates
-from app.models import ImportStatus, Paper, PaperQuestion, Problem, SourcePdf
+from app.models import FollowupResponse, ImportStatus, Paper, PaperQuestion, Problem, Response, SourcePdf
 from app.pdf.render import CropBox, crop_box, crop_questions, find_anchors, has_text_layer, render_pages
 from app.techniques import TECHNIQUES
 
@@ -76,16 +76,25 @@ def _crops_via_ai(pdf: Path, section: Section, out_dir: Path, ai: AIClient, sett
     return crops
 
 
+def _has_history(db: Session, paper: Paper) -> bool:
+    pq_ids = [q.id for q in paper.questions]
+    problem_ids = [q.problem_id for q in paper.questions]
+    return bool(db.query(Response).filter(Response.paper_question_id.in_(pq_ids)).count()
+                or db.query(FollowupResponse).filter(FollowupResponse.problem_id.in_(problem_ids)).count())
+
+
 def _clear_unpublished(db: Session, src: SourcePdf, categories: list[str]) -> None:
+    """Remove earlier unpublished imports of these categories, unless the child has used them."""
     for paper in db.query(Paper).filter(Paper.source_pdf_id == src.id).all():
-        if paper.category in categories and not paper.published:
+        if paper.category in categories and not paper.published and not _has_history(db, paper):
             problem_ids = {q.problem_id for q in paper.questions}
             for q in list(paper.questions):
                 db.delete(q)
             db.delete(paper)
             db.flush()
             for pid in problem_ids:
-                if not db.query(PaperQuestion).filter(PaperQuestion.problem_id == pid).count():
+                if (not db.query(PaperQuestion).filter(PaperQuestion.problem_id == pid).count()
+                        and not db.query(FollowupResponse).filter(FollowupResponse.problem_id == pid).count()):
                     db.delete(db.get(Problem, pid))
     db.flush()
 
@@ -95,17 +104,18 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
     structure = PdfStructure.model_validate(src.structure)
     pdf = Path(src.path)
     src.status, src.error = ImportStatus.running, None
-    _clear_unpublished(db, src, categories)
     db.commit()
-    text_layer = has_text_layer(pdf)
     try:
+        _clear_unpublished(db, src, categories)
+        db.commit()
+        text_layer = has_text_layer(pdf)
         for section in structure.sections:
             if section.language != "en" or section.category not in categories:
                 continue
             paper = Paper(source_pdf_id=src.id, category=section.category, language="en",
                           duration_min=src.duration_min, published=False)
             db.add(paper)
-            db.flush()
+            db.commit()  # don't hold the SQLite write lock during the slow AI calls below
             out_dir = settings.data_dir / "crops" / str(src.id) / section.category
             if text_layer:
                 anchors = find_anchors(pdf, list(range(section.first_page, section.last_page + 1)))

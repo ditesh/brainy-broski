@@ -7,6 +7,14 @@ from app.config import Settings
 from app.db import Base, make_engine, get_db
 
 
+@pytest.fixture(autouse=True)
+def _reset_login_lockouts():
+    from app import auth
+    auth._failures.clear()
+    yield
+    auth._failures.clear()
+
+
 @pytest.fixture
 def settings(tmp_path):
     return Settings(database_url="sqlite://", data_dir=tmp_path / "data", secret_key="test-secret",

@@ -99,8 +99,17 @@ def followup_answer(response_id: int, pq_id: int, request: Request, answer: str 
     r = get_response(db, response_id, user)  # owner only
     if r.attempt.submitted_at is None:
         raise HTTPException(404)
-    pq = db.get(PaperQuestion, pq_id)
-    if pq is None or not pq.paper.published or not answer.strip():
+    label = r.parent_override or r.label
+    tag = (r.diagnosis or {}).get("technique_tag")
+    if label != Label.technique or not tag:
+        raise HTTPException(404)
+    offered = {f["pq"].id: f for f in followups_for_card(db, user, r, tag)}
+    if pq_id not in offered:  # only questions this card actually offered: no probing other answers
+        raise HTTPException(404)
+    pq = offered[pq_id]["pq"]
+    if offered[pq_id]["done"] is not None:
+        return render(request, "_followup.html", f=offered[pq_id], r=r, parent_name=parent_name(db))
+    if not answer.strip():
         raise HTTPException(400)
     f = answer_followup(db, user, r, pq, answer)
     return render(request, "_followup.html", f={"pq": pq, "done": f}, r=r, parent_name=parent_name(db))

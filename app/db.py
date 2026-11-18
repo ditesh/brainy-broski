@@ -11,12 +11,17 @@ class Base(DeclarativeBase):
 
 def make_engine(url: str, **kwargs) -> Engine:
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
+    if url.startswith("sqlite"):
+        connect_args["timeout"] = 15
     eng = create_engine(url, connect_args=connect_args, **kwargs)
     if url.startswith("sqlite"):
         @event.listens_for(eng, "connect")
-        def _fk(dbapi_conn, _):
+        def _pragmas(dbapi_conn, _):
             cur = dbapi_conn.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
+            cur.execute("PRAGMA busy_timeout=15000")
+            if url not in ("sqlite://", "sqlite:///:memory:"):
+                cur.execute("PRAGMA journal_mode=WAL")
             cur.close()
     return eng
 

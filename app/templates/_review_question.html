@@ -3,7 +3,13 @@
     <strong>Q{{ q.number }}</strong>
     <span class="muted">{{ q.part }}</span>
   </div>
-  {% for path in q.crop_paths %}<img class="qimg" src="/files/{{ path }}?v={{ version }}" alt="Question {{ q.number }}">{% endfor %}
+  {% for path in q.crop_paths %}
+    <img class="qimg" src="/files/{{ path }}?v={{ version }}" alt="Question {{ q.number }}">
+    {% if q.crop_paths | length > 1 %}
+    <button class="link" hx-post="/parent/questions/{{ q.id }}/drop-image" hx-vals='{"index": {{ loop.index0 }}}'
+            hx-target="#q{{ q.id }}" hx-swap="outerHTML">Remove this picture</button>
+    {% endif %}
+  {% endfor %}
   {% if error %}<p class="error">{{ error }}</p>{% endif %}
   <form hx-post="/parent/questions/{{ q.id }}" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row" style="margin-top:8px">
     <label style="flex:1 1 120px">Answer <input name="answer" value="{{ q.problem.answer }}"></label>

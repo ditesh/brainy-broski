@@ -16,6 +16,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
         engine = dbmod.make_engine(settings.database_url)
         session_factory = sessionmaker(bind=engine, expire_on_commit=False)
     dbmod.configure(session_factory)
+    _reset_interrupted_jobs(session_factory)
     app = FastAPI(title="Olympiad Practice")
     app.state.settings = settings
     app.state.session_factory = session_factory
@@ -45,3 +46,21 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
         return {"ok": True}
 
     return app
+
+
+def _reset_interrupted_jobs(session_factory: sessionmaker) -> None:
+    """Background jobs die with the process; mark any left 'running'/'pending' as failed so they can be retried."""
+    from sqlalchemy.exc import OperationalError
+
+    from app.models import DiagnosisStatus, ImportStatus, Label, Response, SourcePdf
+    db = session_factory()
+    try:
+        for src in db.query(SourcePdf).filter(SourcePdf.status == ImportStatus.running).all():
+            src.status, src.error = ImportStatus.failed, "The import was interrupted. Press Retry."
+        for r in db.query(Response).filter(Response.diagnosis_status == DiagnosisStatus.pending).all():
+            r.diagnosis_status, r.label = DiagnosisStatus.failed, Label.unsure
+        db.commit()
+    except OperationalError:  # tables not created yet
+        db.rollback()
+    finally:
+        db.close()

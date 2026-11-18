@@ -52,6 +52,7 @@ def test_excludes_recently_answered(db, child, papers, response):
 def test_old_answers_not_excluded(db, child, papers, response):
     a = start_attempt(db, child, papers["Junior"], "practice", [11])
     save_answer(db, a, 11, "1")
+    submit(db, a)  # handed in: questions in unfinished papers are never offered
     a.started_at = utcnow() - timedelta(days=40)
     db.commit()
     assert 11 in {p.number for p in pick_followups(db, child, response, TAG, n=10) if p.paper.category == "Junior"}

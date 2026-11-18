@@ -12,6 +12,7 @@ LABEL_WORDS = {"problem", "question", "soalan", "q"}
 NUM_RE = re.compile(r"^(\d{1,3})[.):]?$")
 CUT_RE = re.compile(r"^(part|section|bahagian)\s+[A-Z]\b", re.IGNORECASE)
 FOOTER_FRAC = 0.92
+HEADER_FRAC = 0.07
 PAD = 4.0
 
 
@@ -169,7 +170,8 @@ def crop_questions(pdf_path: Path, anchors: list[Anchor], out_dir: Path, dpi: in
                 if nxt and nxt.page == a.page + 1:
                     bounds.append(nxt.y)
                 first_bound = min(bounds)
-                above = [r for r in _content_rects(p2) if r.y1 <= first_bound + 1]
+                header_line = p2.rect.height * HEADER_FRAC
+                above = [r for r in _content_rects(p2) if r.y1 <= first_bound + 1 and r.y0 >= header_line]
                 if above and (nxt is not None and nxt.page == a.page + 1):
                     top = min(r.y0 for r in above)
                     if top < first_bound - 5:
