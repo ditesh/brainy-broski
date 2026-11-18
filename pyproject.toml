@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.163", "uvicorn[standard]", "jinja2", "sqlalchemy>=2.1", "pymupdf>=2.1",
   "pillow", "anthropic>=2.10", "pydantic>=2.14", "pydantic-settings", "argon2-cffi",
-  "qrcode[pil]", "python-multipart", "itsdangerous", "markdown-it-py",
+  "qrcode[pil]", "python-multipart", "itsdangerous", "markdown-it-py", "httpx",
 ]
 
 [project.optional-dependencies]

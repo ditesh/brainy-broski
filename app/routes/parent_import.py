@@ -3,12 +3,14 @@ from datetime import date
 from fastapi import (APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request,
                      UploadFile)
 from fastapi.responses import RedirectResponse
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.ai.client import AIClient, get_ai
 from app.ai.schemas import PdfStructure
 from app.auth import require_parent
 from app.db import get_db
+from app.fetch import FetchError, fetch_pdf
 from app.importer.pipeline import detect_structure, run_import
 from app.models import ImportStatus, Paper, SourcePdf, User
 from app.web import render
@@ -48,15 +50,28 @@ def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int
 
 @router.post("/parent/import")
 async def import_upload(request: Request, background: BackgroundTasks,
-                        file: UploadFile = File(...), contest: str = Form(...), year: int = Form(...),
-                        duration_min: str = Form(""), user: User = Depends(require_parent),
+                        file: UploadFile | None = File(None), url: str = Form(""), contest: str = Form(...),
+                        year: int = Form(...), duration_min: str = Form(""), user: User = Depends(require_parent),
                         db: Session = Depends(get_db), ai: AIClient = Depends(get_ai)):
-    data = await file.read()
-    if not data.startswith(b"%PDF"):
+    def fail(msg: str):
         return render(request, "import_upload.html", status_code=400, contests=CONTESTS,
-                      this_year=date.today().year, error="That file isn't a PDF. Please choose the paper's PDF file.")
+                      this_year=date.today().year, error=msg, url=url)
+
+    data = await file.read() if file is not None and file.filename else b""
+    filename = file.filename if data else ""
+    if not data and url.strip():
+        try:
+            filename, data = await run_in_threadpool(
+                fetch_pdf, url, getattr(request.app.state, "http_transport", None),
+                getattr(request.app.state, "resolve_host", None))
+        except FetchError as e:
+            return fail(str(e))
+    if not data:
+        return fail("Choose a PDF file or paste a link to one.")
+    if not data.startswith(b"%PDF"):
+        return fail("That file isn't a PDF. Please choose the paper's PDF file.")
     settings = request.app.state.settings
-    src = SourcePdf(filename=file.filename or "paper.pdf", path="", contest=contest, year=year,
+    src = SourcePdf(filename=filename or "paper.pdf", path="", contest=contest, year=year,
                     duration_min=int(duration_min) if duration_min.strip().isdigit() else None)
     db.add(src)
     db.flush()
