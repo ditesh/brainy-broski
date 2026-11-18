@@ -1,0 +1,18 @@
+[project]
+name = "olympiad-practice"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.163", "uvicorn[standard]", "jinja2", "sqlalchemy>=2.1", "pymupdf>=2.1",
+  "pillow", "anthropic>=2.10", "pydantic>=2.14", "pydantic-settings", "argon2-cffi",
+  "qrcode[pil]", "python-multipart", "itsdangerous", "markdown-it-py",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "freezegun"]
+
+[tool.setuptools]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
