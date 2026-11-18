@@ -34,7 +34,10 @@
     <div class="card" style="margin-top:12px">
       <p style="margin-top:0"><strong>Technique: {{ c.technique.name }}</strong></p>
       <p>{{ c.technique.description }}</p>
-      {% for f in c.followups %}{% include "_followup.html" %}{% endfor %}
+      {% if c.show_followups and c.r.attempt.user_id == user.id %}
+        {% for f in c.followups %}{% with parent_name = c.parent_name %}{% include "_followup.html" %}{% endwith %}{% endfor %}
+        {% if not c.followups %}<p class="muted">No more practice questions for this technique yet.</p>{% endif %}
+      {% endif %}
     </div>
     {% endif %}
   {% endif %}

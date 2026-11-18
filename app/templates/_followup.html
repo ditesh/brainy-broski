@@ -1,0 +1,23 @@
+{% set pq = f.pq %}{% set done = f.done %}
+<div class="followup card" id="fu{{ r.id }}-{{ pq.id }}">
+  <p style="margin-top:0"><strong>Try one like it</strong> <span class="muted">· {{ pq.paper.title }} Q{{ pq.number }}</span></p>
+  {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Practice question">{% endfor %}
+  {% if done %}
+    {% if done.correct %}
+      <p class="good">Correct! ({{ done.answer }})</p>
+    {% else %}
+      <p class="bad">Not quite — the answer is {{ pq.problem.answer }}.</p>
+      {% if pq.problem.verified and pq.problem.reference_solution %}
+        <details><summary>See how</summary><div>{{ pq.problem.reference_solution | md }}</div></details>
+      {% else %}
+        <p>Go through this one with {{ parent_name }}.</p>
+      {% endif %}
+    {% endif %}
+  {% else %}
+    <form hx-post="/responses/{{ r.id }}/followups/{{ pq.id }}" hx-target="#fu{{ r.id }}-{{ pq.id }}" hx-swap="outerHTML" class="row">
+      <label style="flex:1 1 160px">Your answer <input name="answer" autocomplete="off" required
+        {% if pq.problem.answer_type.value == "integer" %}inputmode="numeric"{% endif %}></label>
+      <button class="primary">Check</button>
+    </form>
+  {% endif %}
+</div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -6,7 +6,8 @@ from app.ai.client import AIClient, get_ai
 from app.auth import require_parent, require_user
 from app.db import get_db
 from app.diagnosis.service import enqueue_diagnosis
-from app.models import Response, Role, Technique, User
+from app.followups import answer_followup, followups_for_card
+from app.models import Label, Paper, PaperQuestion, Response, Role, Technique, User
 from app.practice.service import misses
 from app.routes.practice import get_attempt, get_response
 from app.techniques import TECHNIQUES
@@ -41,11 +42,15 @@ def technique_info(db: Session, tag: str | None) -> dict | None:
 def card_context(request: Request, db: Session, r: Response, user: User) -> dict:
     d = r.diagnosis or {}
     label = (r.parent_override or r.label)
+    tag = d.get("technique_tag")
+    followups = []
+    if label == Label.technique and tag and r.attempt.user_id == user.id:
+        followups = followups_for_card(db, user, r, tag)
     return {
         "r": r, "q": r.paper_question, "problem": r.paper_question.problem, "d": d,
         "label": label.value if label else None, "label_text": LABEL_TEXT, "parent_name": parent_name(db),
         "technique": technique_info(db, d.get("technique_tag")), "is_parent": user.role == Role.parent,
-        "followups": [],
+        "followups": followups, "show_followups": label == Label.technique and bool(tag),
     }
 
 
@@ -86,3 +91,16 @@ def rediagnose(response_id: int, request: Request, background: BackgroundTasks,
         p.verified = None  # allow another solve attempt
     enqueue_diagnosis(background, request.app, db, r)
     return RedirectResponse(f"/responses/{r.id}/feedback", status_code=303)
+
+
+@router.post("/responses/{response_id}/followups/{pq_id}")
+def followup_answer(response_id: int, pq_id: int, request: Request, answer: str = Form(""),
+                    user: User = Depends(require_user), db: Session = Depends(get_db)):
+    r = get_response(db, response_id, user)  # owner only
+    if r.attempt.submitted_at is None:
+        raise HTTPException(404)
+    pq = db.get(PaperQuestion, pq_id)
+    if pq is None or not pq.paper.published or not answer.strip():
+        raise HTTPException(400)
+    f = answer_followup(db, user, r, pq, answer)
+    return render(request, "_followup.html", f={"pq": pq, "done": f}, r=r, parent_name=parent_name(db))
