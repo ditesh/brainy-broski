@@ -42,3 +42,21 @@ def test_label_chips_have_emoji(child_client, db, junior_paper, child, parent):
     r.diagnosis = {"label": "technique", "technique_tag": "parity", "hint": "h", "explanation": "e"}
     db.commit()
     assert "🧠" in child_client.get(f"/responses/{r.id}/feedback").text
+
+
+def test_links_not_underlined_until_hover():
+    import re
+    from pathlib import Path
+    css = Path("app/static/app.css").read_text()
+    base = re.search(r"(?m)^a \{([^}]*)\}", css).group(1)
+    assert "text-decoration: none" in base
+    assert re.search(r"a:hover[^{]*\{[^}]*text-decoration: underline", css)
+    assert re.search(r"a:focus-visible[^{]*\{[^}]*text-decoration: underline", css)
+
+
+def test_select_uses_custom_centred_arrow():
+    import re
+    from pathlib import Path
+    css = Path("app/static/app.css").read_text()
+    rule = re.search(r"(?m)^select \{([^}]*)\}", css).group(1)
+    assert "appearance: none" in rule and "50%" in rule and "padding-right" in rule
