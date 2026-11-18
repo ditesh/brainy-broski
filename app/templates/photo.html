@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Photo of your working</h1>
+<p>Question {{ r.paper_question.number }}. Take a clear photo of the working you wrote for this question.</p>
+<div class="card">
+  <h2 style="margin-top:0">Using your phone</h2>
+  <p>Scan this code with your phone's camera, then tap <strong>Take photo</strong>.</p>
+  <div style="max-width:220px;background:#fff;padding:8px;border-radius:8px">{{ qr | safe }}</div>
+  <p class="muted" style="word-break:break-all">Or open: {{ url }} (works for {{ minutes }} minutes)</p>
+</div>
+<div class="card">
+  <h2 style="margin-top:0">Using this device</h2>
+  <form method="post" action="/responses/{{ r.id }}/photo" enctype="multipart/form-data" class="stack">
+    <input type="file" name="photo" accept="image/*" capture="environment" required>
+    <button class="primary">Upload photo</button>
+  </form>
+</div>
+<div id="photo-status" hx-get="/responses/{{ r.id }}/photo" hx-trigger="every 3s" hx-swap="innerHTML">
+  {% include "_photo_status.html" %}
+</div>
+{% endblock %}

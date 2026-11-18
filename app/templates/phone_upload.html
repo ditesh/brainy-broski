@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+{% if expired %}
+  <h1>Link expired</h1>
+  <p>{{ expired }}</p>
+{% elif done %}
+  <h1>Got it!</h1>
+  <p>Your photo is on its way. Go back to the laptop to see your feedback.</p>
+{% else %}
+  <h1>Photo of your working</h1>
+  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  <form method="post" action="/u/{{ token }}" enctype="multipart/form-data" class="stack" id="f">
+    <label class="button primary" style="font-size:1.2rem;min-height:64px">
+      Take photo
+      <input type="file" name="photo" accept="image/*" capture="environment" required
+             style="display:none" onchange="document.getElementById('f').submit()">
+    </label>
+    <p class="muted">Make sure the whole working is in the picture and it isn't blurry.</p>
+  </form>
+{% endif %}
+{% endblock %}
