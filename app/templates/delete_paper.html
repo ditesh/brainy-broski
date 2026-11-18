@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Delete {{ src.contest }} {{ src.year }}?</h1>
+<div class="card">
+  <p>This permanently deletes <strong>{{ src.filename }}</strong> and:</p>
+  <ul>
+    <li>{% if s.papers %}its papers: {{ s.papers | join(", ") }}{% else %}its import (no papers yet){% endif %}</li>
+    {% if s.attempts %}
+    <li><strong>{{ s.attempts }} attempt{{ "s" if s.attempts != 1 }}</strong> by {{ s.children | join(", ") }}, with scores, feedback{% if s.photos %} and {{ s.photos }} photo{{ "s" if s.photos != 1 }} of working{% endif %}.
+      These disappear from the progress page.</li>
+    {% endif %}
+  </ul>
+  {% if s.attempts %}
+  <p class="muted">Just want to hide it? Unpublish its papers instead — they leave the practice list but the history stays.</p>
+  {% endif %}
+  {% if src.status.value == "running" %}
+  <p class="bad">It's still being imported. Wait for that to finish, then delete it.</p>
+  {% else %}
+  <div class="row">
+    <form method="post" action="/parent/import/{{ src.id }}/delete"><button class="danger">Delete for good</button></form>
+    <a class="button" href="/parent">Keep it</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

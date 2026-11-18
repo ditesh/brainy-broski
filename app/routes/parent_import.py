@@ -11,6 +11,7 @@ from app.ai.schemas import PdfStructure
 from app.auth import require_parent
 from app.db import get_db
 from app.fetch import FetchError, fetch_pdf
+from app.importer.delete import delete_source, deletion_summary
 from app.importer.pipeline import detect_structure, run_import
 from app.models import ImportStatus, Paper, SourcePdf, User
 from app.web import render
@@ -136,3 +137,20 @@ def import_retry(src_id: int, request: Request, background: BackgroundTasks,
     else:
         background.add_task(_job, request.app, detect_structure, src.id)
     return RedirectResponse(f"/parent/import/{src.id}", status_code=303)
+
+
+@router.get("/parent/import/{src_id}/delete")
+def delete_confirm(src_id: int, request: Request, user: User = Depends(require_parent),
+                   db: Session = Depends(get_db)):
+    src = _get_src(db, src_id)
+    return render(request, "delete_paper.html", src=src, s=deletion_summary(db, src))
+
+
+@router.post("/parent/import/{src_id}/delete")
+def delete_paper(src_id: int, request: Request, user: User = Depends(require_parent),
+                 db: Session = Depends(get_db)):
+    src = _get_src(db, src_id)
+    if src.status == ImportStatus.running:
+        raise HTTPException(400, "This paper is still being imported. Wait for it to finish, then delete it.")
+    delete_source(db, request.app.state.settings, src)
+    return RedirectResponse("/parent", status_code=303)

@@ -22,7 +22,8 @@
       {% if p.published %}<span class="chip">published</span>{% else %}<span class="chip unsure">not published</span>{% endif %}
     </div>
   {% endfor %}
-  <p><a href="/parent/import/{{ s.id }}">Import settings</a></p>
+  <p class="row"><a href="/parent/import/{{ s.id }}">Import settings</a>
+    <a class="danger-link" href="/parent/import/{{ s.id }}/delete">🗑 Delete</a></p>
 </div>
 {% endfor %}
 {% endblock %}
