@@ -41,6 +41,10 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.include_router(feedback.router)
     app.include_router(progress.router)
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return RedirectResponse("/static/favicon.svg", status_code=308)
+
     @app.get("/health")
     def health():
         return {"ok": True}
