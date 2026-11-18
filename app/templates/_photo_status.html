@@ -1,4 +1,5 @@
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% from "macros.html" import alert %}
+{% if error %}{{ alert("error", "Hmm, that didn't work", error) }}{% endif %}
 {% if r.photo_path %}
 <p class="good">Got your photo! <a class="button primary" href="/responses/{{ r.id }}/feedback">See feedback</a></p>
 {% else %}

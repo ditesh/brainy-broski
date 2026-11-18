@@ -59,6 +59,8 @@ def practice_start(paper_id: int = Form(...), mode: str = Form("practice"), part
     if paper is None or not paper.published:
         raise HTTPException(404)
     numbers = [q.number for q in paper.questions if q.part == part] if part else None
+    if part and not numbers:
+        raise HTTPException(400, "No questions in that part.")
     try:
         a = start_attempt(db, user, paper, mode, numbers)
     except ValueError:

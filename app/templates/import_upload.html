@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from "macros.html" import alert %}
 {% block content %}
 <h1>Add a paper</h1>
 <p class="muted">Upload the PDF with the questions and the answer key. The tool will find the questions; you check them before the paper is used for practice.</p>
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% if error %}{{ alert("error", "We couldn't use that paper", error) }}{% endif %}
 <form method="post" action="/parent/import" enctype="multipart/form-data" class="stack">
   <label>Paste a link to the PDF
     <input type="url" name="url" value="{{ url or '' }}" placeholder="https://…/paper.pdf" inputmode="url">

@@ -1,3 +1,4 @@
+{% from "macros.html" import alert %}
 <div class="card" id="q{{ q.id }}">
   <div class="row" style="justify-content:space-between">
     <strong>Q{{ q.number }}</strong>
@@ -10,7 +11,7 @@
             hx-target="#q{{ q.id }}" hx-swap="outerHTML">Remove this picture</button>
     {% endif %}
   {% endfor %}
-  {% if error %}<p class="error">{{ error }}</p>{% endif %}
+  {% if error %}{{ alert("error", "Hmm, that didn't work", error) }}{% endif %}
   <form hx-post="/parent/questions/{{ q.id }}" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row" style="margin-top:8px">
     <label style="flex:1 1 120px">Answer <input name="answer" value="{{ q.problem.answer }}"></label>
     <label style="flex:1 1 110px">Type

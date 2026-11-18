@@ -1,9 +1,10 @@
+{% from "macros.html" import alert %}
 <div {% if src.status.value in ("pending", "running") %}hx-get="/parent/import/{{ src.id }}" hx-trigger="every 2s" hx-target="#status" hx-swap="innerHTML"{% endif %}>
 {% if src.status.value in ("pending", "running") %}
-  <p class="card">Working on it… reading the paper and cutting out questions. This can take a minute or two.</p>
+  {{ alert("warn", "Working on it…", "Reading the paper and cutting out the questions. This can take a minute or two — you can leave this page open.") }}
 {% elif src.status.value == "failed" %}
-  <p class="error">{{ src.error }}</p>
-  <form method="post" action="/parent/import/{{ src.id }}/retry"><button class="primary">Retry</button></form>
+  {{ alert("error", "We couldn't read this paper" if not src.structure else "The import stopped partway", src.error,
+           [{"label": "Retry", "post": "/parent/import/" ~ src.id ~ "/retry"}, {"label": "Back to papers", "href": "/parent"}]) }}
 {% elif src.status.value == "needs_review" %}
   {% if categories %}
   <form method="post" action="/parent/import/{{ src.id }}" class="stack">
@@ -14,10 +15,11 @@
     <button class="primary">Import</button>
   </form>
   {% else %}
-  <p class="error">No English papers were found in this PDF.</p>
+  {{ alert("error", "No English papers found", "This PDF doesn't seem to have an English version. Check it's the right file.",
+           [{"label": "Add a different paper", "href": "/parent/import"}]) }}
   {% endif %}
 {% elif src.status.value == "done" %}
-  <p class="good">Done. Check each paper, fix anything that looks wrong, then publish it.</p>
+  {{ alert("success", "Done!", "Check each paper, fix anything that looks wrong, then publish it.") }}
 {% endif %}
 {% if papers %}
   <h2>Imported papers</h2>

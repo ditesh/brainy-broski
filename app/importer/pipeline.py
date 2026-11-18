@@ -23,6 +23,12 @@ diagram and answer choices, as fractions of the page width and height (0 = left/
 Exclude page headers, footers and part headings."""
 
 
+def _plain(e: Exception) -> str:
+    """AIErrors already carry a friendly sentence; anything else gets a generic one (details are in the log)."""
+    from app.ai.client import AIError
+    return str(e) if isinstance(e, AIError) else "Something unexpected went wrong while reading the paper. Press Retry."
+
+
 def _tag_list() -> str:
     return "\n".join(f"- {tag}: {name}" for tag, name, _ in TECHNIQUES)
 
@@ -41,7 +47,7 @@ def detect_structure(source_pdf_id: int, db: Session, ai: AIClient, settings: Se
         log.exception("structure detection failed")
         db.rollback()
         src = db.get(SourcePdf, source_pdf_id)
-        src.status, src.error = ImportStatus.failed, f"Could not read the paper's layout: {e}"
+        src.status, src.error = ImportStatus.failed, _plain(e)
     db.commit()
 
 
@@ -145,5 +151,5 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
         log.exception("import failed")
         db.rollback()
         src = db.get(SourcePdf, source_pdf_id)
-        src.status, src.error = ImportStatus.failed, f"Import stopped: {e}"
+        src.status, src.error = ImportStatus.failed, _plain(e)
     db.commit()

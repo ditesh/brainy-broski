@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros.html" import alert %}
 {% block content %}
 <div class="row" style="justify-content:space-between">
   <h1>Papers</h1>
@@ -13,7 +14,8 @@
     <strong>{{ s.contest }} {{ s.year }}</strong>
     <span class="muted">{{ s.filename }}</span>
   </div>
-  <p class="muted">Status: {{ s.status.value.replace("_", " ") }}{% if s.error %} — <span class="error">{{ s.error }}</span>{% endif %}</p>
+  <p class="muted">Status: {{ s.status.value.replace("_", " ") }}</p>
+  {% if s.status.value == "failed" and s.error %}{{ alert("error", "Import didn't finish", s.error, [{"label": "Open to retry", "href": "/parent/import/" ~ s.id}]) }}{% endif %}
   {% for p in papers[s.id] %}
     <div class="row">
       <a href="/parent/papers/{{ p.id }}/review">{{ p.category }}</a>

@@ -128,7 +128,7 @@ def test_scanned_pdf_uses_ai_boxes(db, settings, fake_ai, tmp_path):
 def test_unexpected_error_in_structure_marks_failed(db, settings, fake_ai, src):
     fake_ai.add(PdfStructure, RuntimeError("weird"))
     detect_structure(src.id, db, fake_ai, settings)
-    assert src.status == ImportStatus.failed and "weird" in src.error
+    assert src.status == ImportStatus.failed and "weird" not in src.error and "Retry" in src.error
 
 
 def test_unexpected_error_in_import_marks_failed(db, settings, fake_ai, src):

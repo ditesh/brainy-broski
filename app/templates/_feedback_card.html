@@ -1,3 +1,4 @@
+{% from "macros.html" import alert %}
 {% set r = c.r %}{% set q = c.q %}{% set d = c.d %}
 <div class="card" id="fb{{ r.id }}"
      {% if r.diagnosis_status.value == "pending" %}hx-get="/responses/{{ r.id }}/feedback" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
@@ -41,7 +42,7 @@
     </div>
     {% endif %}
   {% endif %}
-  {% if c.is_parent and d.get("error") %}<p class="error">Couldn't check this one: {{ d.error }}</p>{% endif %}
+  {% if c.is_parent and d.get("error") %}{{ alert("error", "Couldn't check this one", d.error, [{"label": "Check again", "post": "/parent/responses/" ~ r.id ~ "/rediagnose"}]) }}{% endif %}
   {% if c.is_parent and r.diagnosis_status.value != "pending" %}
     <form method="post" action="/parent/responses/{{ r.id }}/rediagnose"><button class="link">Check this one again</button></form>
   {% endif %}

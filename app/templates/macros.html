@@ -1,0 +1,23 @@
+{# Friendly alert panel. kind: error | warn | info | success #}
+{% macro alert(kind, title, message=None, actions=None, icon=None) -%}
+{% set icons = {"error": "😕", "warn": "⏳", "info": "💡", "success": "🎉"} %}
+<div class="alert {{ kind }}" role="{{ 'alert' if kind == 'error' else 'status' }}">
+  <div class="alert-icon" aria-hidden="true">{{ icon or icons.get(kind, "💡") }}</div>
+  <div class="alert-body">
+    <p class="alert-title">{{ title }}</p>
+    {% if message %}<p class="alert-msg">{{ message }}</p>{% endif %}
+    {% if caller is defined %}{{ caller() }}{% endif %}
+    {% if actions %}
+    <div class="row alert-actions">
+      {% for a in actions %}
+        {% if a.post %}
+        <form method="post" action="{{ a.post }}" class="inline"><button class="{{ 'primary' if loop.first else '' }}">{{ a.label }}</button></form>
+        {% else %}
+        <a class="button {{ 'primary' if loop.first else '' }}" href="{{ a.href }}">{{ a.label }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{%- endmacro %}

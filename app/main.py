@@ -32,6 +32,9 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     def _not_logged_in(request: Request, exc: NotLoggedIn):
         return RedirectResponse("/login", status_code=303)
 
+    from app import errors
+    errors.install(app)
+
     app.include_router(auth_router)
     app.include_router(parent_import.router)
     app.include_router(practice.router)

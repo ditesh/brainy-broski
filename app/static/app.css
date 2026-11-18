@@ -94,3 +94,15 @@ svg .axis { fill: var(--muted); font-size: 10px; }
 svg .baseline { stroke: var(--line); }
 .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; }
 .legend { font-size: .9rem; gap: 14px; margin-top: 8px; }
+.alert { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; margin: 14px 0; border-radius: var(--radius);
+         border: 2px solid var(--line); background: var(--card); box-shadow: var(--shadow); }
+.alert-icon { font-size: 1.9rem; line-height: 1; flex: none; }
+.alert-body { flex: 1; min-width: 0; }
+.alert-title { margin: 0; font-weight: 900; font-size: 1.1rem; }
+.alert-msg { margin: 4px 0 0; }
+.alert-actions { margin-top: 12px; }
+.alert.error { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); background: color-mix(in srgb, var(--bad-bg) 70%, var(--card)); }
+.alert.warn { border-color: color-mix(in srgb, var(--sun) 60%, var(--line)); }
+.alert.success { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); background: color-mix(in srgb, var(--good-bg) 70%, var(--card)); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; max-width: min(92vw, 420px);
+         background: var(--fg); color: var(--bg); padding: 12px 18px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }

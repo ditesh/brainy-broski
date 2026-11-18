@@ -28,6 +28,22 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script>
+  document.addEventListener("htmx:responseError", function (e) {
+    var t = document.getElementById("toast"), tmp = document.createElement("div");
+    tmp.innerHTML = e.detail.xhr.responseText || "";
+    var title = tmp.querySelector(".alert-title"), msg = tmp.querySelector(".alert-msg");
+    t.innerHTML = "<strong>😕 " + (title ? title.textContent : "That didn't work") + "</strong>" +
+      (msg ? "<br>" + msg.textContent : "<br>Please try again.");
+    t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function () { t.hidden = true; }, 6000);
+  });
+  document.addEventListener("htmx:sendError", function () {
+    var t = document.getElementById("toast");
+    t.innerHTML = "<strong>📡 No connection</strong><br>Check the internet and try again.";
+    t.hidden = false; clearTimeout(t._h); t._h = setTimeout(function () { t.hidden = true; }, 6000);
+  });
+  </script>
   {% block scripts %}{% endblock %}
 </body>
 </html>
