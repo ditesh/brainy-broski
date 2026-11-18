@@ -14,7 +14,7 @@ from app.models import ImportStatus, Paper, SourcePdf, User
 from app.web import render
 
 router = APIRouter()
-CONTESTS = ["IMONST", "SASMO", "Kangaroo", "ASMO", "Other"]
+CONTESTS = ["IMONST1", "IMONST2", "SASMO", "Kangaroo", "ASMO", "Other"]
 
 
 @router.get("/parent")

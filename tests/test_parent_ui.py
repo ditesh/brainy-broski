@@ -117,3 +117,9 @@ def test_review_offers_link_candidates_with_same_answer(parent_client, papers, d
     parent_client.post(f"/parent/questions/{j1.id}/unlink")
     html = parent_client.get(f"/parent/papers/{papers['Junior'].id}/review").text
     assert f'<option value="{p6.id}">Primary Q6</option>' in html
+
+
+def test_contest_choices_split_imonst_rounds(parent_client):
+    html = parent_client.get("/parent/import").text
+    assert "<option>IMONST1</option>" in html and "<option>IMONST2</option>" in html
+    assert "<option>IMONST</option>" not in html
