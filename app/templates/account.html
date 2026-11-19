@@ -45,4 +45,22 @@
     <button class="primary">Change password</button>
   </form>
 </section>
+{% if children %}
+<section class="card stack-section" aria-labelledby="kids-title">
+  <h2 id="kids-title">Children's passwords</h2>
+  <p class="muted">If a child forgets their password, set a new one here. They'll be logged out everywhere and log in with the new one.</p>
+  {% for c in children %}
+  <form method="post" action="/account/children/{{ c.id }}/password" class="stack child-reset" id="reset-{{ c.id }}">
+    <h3>{{ c.avatar }} {{ c.display_name }} <span class="muted">({{ c.username }})</span></h3>
+    {% if reset_child == c.id and reset_error %}{{ alert("error", reset_error) }}{% endif %}
+    {% if reset_child == c.id and reset_done %}{{ alert("success", reset_done) }}{% endif %}
+    <input type="text" name="username" value="{{ c.username }}" autocomplete="off" hidden>
+    <label>New password <span class="muted">(at least 6 characters)</span>
+      <input type="password" name="new_password" autocomplete="new-password" minlength="6" maxlength="128" required></label>
+    <label>New password again <input type="password" name="confirm_password" autocomplete="new-password" minlength="6" maxlength="128" required></label>
+    <button>Set new password</button>
+  </form>
+  {% endfor %}
+</section>
+{% endif %}
 {% endblock %}

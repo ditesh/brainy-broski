@@ -177,3 +177,5 @@ input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-of
 .avatar-pick:hover span { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .avatar-pick input:checked + span { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
 .avatar-pick input:focus-visible + span { outline: 3px solid var(--sun); outline-offset: 2px; }
+.child-reset + .child-reset { margin-top: 20px; padding-top: 16px; border-top: 2px solid var(--line); }
+.child-reset h3 { margin: 0; }

@@ -159,3 +159,66 @@ def test_wrong_current_password_locks_out(child_client, monkeypatch):
         _pw(child_client, current="nope")
     r = _pw(child_client)  # even the right one is refused for a while
     assert r.status_code == 429
+
+
+# ---- parent resets a child's password ----
+
+def _reset(client, child_id, new="kidpass1", confirm=None):
+    return client.post(f"/account/children/{child_id}/password",
+                       data={"new_password": new, "confirm_password": new if confirm is None else confirm})
+
+
+def test_parent_sees_reset_form_for_each_child(parent_client, child, child2):
+    html = parent_client.get("/account").text
+    assert html.count(f'action="/account/children/{child.id}/password"') == 1
+    assert html.count(f'action="/account/children/{child2.id}/password"') == 1
+
+
+def test_child_does_not_see_reset_forms(child_client, child2):
+    assert "/account/children/" not in child_client.get("/account").text
+
+
+def test_parent_resets_child_password(parent_client, child, db, app):
+    r = _reset(parent_client, child.id)
+    assert r.status_code == 200 and "New password set for Kid" in r.text
+    assert verify_password("kidpass1", _user(db, "kid").password_hash)
+    assert login_as(TestClient(app), "kid", "kidpass1").status_code == 303
+
+
+def test_reset_signs_child_out(app, parent_client, child):
+    kid = TestClient(app)
+    login_as(kid, "kid")
+    _reset(parent_client, child.id)
+    assert kid.get("/practice", follow_redirects=False).status_code in (302, 303)
+
+
+def test_parent_stays_logged_in_after_reset(parent_client, child):
+    _reset(parent_client, child.id)
+    assert parent_client.get("/parent", follow_redirects=False).status_code == 200
+
+
+def test_reset_needs_matching_passwords(parent_client, child, db):
+    r = _reset(parent_client, child.id, confirm="other123")
+    assert r.status_code == 400 and "match" in r.text
+    assert verify_password("pw", _user(db, "kid").password_hash)
+
+
+def test_reset_needs_long_enough_password(parent_client, child):
+    assert _reset(parent_client, child.id, new="abc").status_code == 400
+
+
+def test_child_cannot_reset_passwords(child_client, child2, db):
+    assert _reset(child_client, child2.id).status_code == 403
+    assert verify_password("pw", _user(db, "kid2").password_hash)
+
+
+def test_parent_cannot_reset_another_parent(parent_client, db):
+    from app.auth import create_user
+    from app.models import Role
+    mum = create_user(db, "mum", "Mum", Role.parent, "pw")
+    assert _reset(parent_client, mum.id).status_code == 404
+    assert verify_password("pw", _user(db, "mum").password_hash)
+
+
+def test_reset_unknown_user(parent_client):
+    assert _reset(parent_client, 9999).status_code == 404
