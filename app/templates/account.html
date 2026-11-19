@@ -32,6 +32,8 @@
   </form>
 </section>
 
+{% if goal %}{% with goal_next = "/account" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
+
 <section class="card stack-section" aria-labelledby="pw-title">
   <h2 id="pw-title">Change password</h2>
   {% if pw_error %}{{ alert("error", pw_error) }}{% endif %}

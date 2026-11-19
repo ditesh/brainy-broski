@@ -1,0 +1,39 @@
+{# Weekly goal: ring + numbers, or a first-time prompt. Needs: goal (GoalStatus), optional goal_error, goal_next. #}
+{% from "macros.html" import alert %}
+<section class="card goal-card" aria-labelledby="goal-title">
+  {% if goal_error %}{{ alert("error", goal_error) }}{% endif %}
+  {% if goal.target %}
+    {% set pct = [goal.done / goal.target, 1] | min %}
+    <div class="goal-row">
+      <svg class="goal-ring{% if goal.met %} met{% endif %}" viewBox="0 0 120 120" role="img"
+           aria-label="{{ goal.done }} of {{ goal.target }} problems this week">
+        <circle class="track" cx="60" cy="60" r="50"/>
+        <circle class="fill" cx="60" cy="60" r="50" pathLength="100" stroke-dasharray="{{ (pct * 100) | round(1) }} 100"/>
+        <text x="60" y="58" text-anchor="middle" class="big">{{ goal.done }}</text>
+        <text x="60" y="80" text-anchor="middle" class="small">of {{ goal.target }}</text>
+      </svg>
+      <div class="goal-text">
+        <h2 id="goal-title">{% if goal.met %}Goal smashed! 🎉{% else %}This week's goal{% endif %}</h2>
+        <p>{{ goal.done }} of {{ goal.target }} this week{% if not goal.met %} · {{ goal.target - goal.done }} to go{% endif %}</p>
+        {% if goal.streak >= 2 %}<p class="streak">{{ goal.streak }} weeks in a row 🔥</p>{% endif %}
+        {% if goal.pending %}<p class="muted">From next week: {{ goal.pending }}</p>{% endif %}
+        {% if goal_next == "/account" %}
+        <form method="post" action="/goal" class="row goal-change">
+          <input type="hidden" name="next" value="/account">
+          <label>Change my goal <input type="number" name="target" min="1" max="200" inputmode="numeric" value="{{ goal.pending or goal.target }}"></label>
+          <button>Save</button>
+        </form>
+        <p class="muted">A new goal starts next Monday.</p>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <h2 id="goal-title">🎯 Set your weekly goal</h2>
+    <p>How many problems will you try this week? Pick a number you can really do — you can change it later.</p>
+    <form method="post" action="/goal" class="row goal-change">
+      <input type="hidden" name="next" value="{{ goal_next or '/practice' }}">
+      <label>Problems per week <input type="number" name="target" min="1" max="200" inputmode="numeric" placeholder="e.g. 15" required></label>
+      <button class="primary">Set goal</button>
+    </form>
+  {% endif %}
+</section>

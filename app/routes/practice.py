@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.auth import require_user
+from app.goals import goal_status
 from app.db import get_db
 from app.models import Attempt, Paper, Response, Role, SourcePdf, User
 from app.practice.service import (deadline, is_expired, misses, paper_status, response_for, save_answer,
@@ -33,9 +34,23 @@ def get_response(db: Session, response_id: int, user: User, allow_parent: bool =
     return r
 
 
+def child_goal(request: Request, db: Session, user: User):
+    """This week's goal for a child (None for parents)."""
+    if user.role != Role.child:
+        return None
+    from app import daily
+    tz = request.app.state.settings.timezone
+    return goal_status(db, user, daily.local_today(tz), tz)
+
+
 @router.get("/practice")
 def practice_home(request: Request, contest: str = "", level: str = "", user: User = Depends(require_user),
                   db: Session = Depends(get_db)):
+    return render_home(request, db, user, contest, level)
+
+
+def render_home(request: Request, db: Session, user: User, contest: str = "", level: str = "",
+                status_code: int = 200, **extra):
     papers = (db.query(Paper).join(SourcePdf).filter(Paper.published.is_(True))
               .order_by(SourcePdf.year.desc(), Paper.id).all())
     attempts = db.query(Attempt).filter_by(user_id=user.id).order_by(Attempt.started_at.desc()).all()
@@ -61,10 +76,11 @@ def practice_home(request: Request, contest: str = "", level: str = "", user: Us
     done = [a for a in attempts if a.submitted_at is not None][:10]
     from app import daily
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
-    return render(request, "practice_home.html", wonder_hidden=request.session.get("wonder_hidden") == today,
+    return render(request, "practice_home.html", status_code=status_code,
+                  wonder_hidden=request.session.get("wonder_hidden") == today, goal=child_goal(request, db, user),
                   contests=contests, contest=contest, levels=choices,
                   level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user),
-                  number_fact=_fav_number_fact(user))
+                  number_fact=_fav_number_fact(user), **extra)
 
 
 def _fav_number_fact(user: User) -> str:

@@ -18,8 +18,10 @@ def _page(request: Request, user: User, status_code: int = 200, **ctx):
     children = []
     if user.role == Role.parent:
         children = object_session(user).query(User).filter(User.role == Role.child).order_by(User.display_name).all()
+    from app.routes.practice import child_goal
     return render(request, "account.html", status_code=status_code, avatars=AVATARS, text_fields=TEXT_FIELDS,
-                  profile=user.profile or {}, is_child=user.role == Role.child, children=children, **ctx)
+                  profile=user.profile or {}, is_child=user.role == Role.child, children=children,
+                  goal=child_goal(request, object_session(user), user), **ctx)
 
 
 def _new_password_problem(new: str, confirm: str) -> str | None:

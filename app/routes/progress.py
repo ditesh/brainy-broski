@@ -8,6 +8,7 @@ from app.models import Label, Response, Role, User
 from app.progress import (effective_label, miss_breakdown_by_week, paper_history, recent_misses,
                           technique_table)
 from app.routes.feedback import LABEL_TEXT
+from app.routes.practice import child_goal
 from app.web import render
 
 router = APIRouter()
@@ -44,7 +45,8 @@ def progress_page(request: Request, user: int | None = None, viewer: User = Depe
     return render(request, "progress.html", target=target, children=children, chart=_week_chart(weeks),
                   techniques=technique_table(db, target), history=paper_history(db, target),
                   misses=recent_misses(db, target), effective_label=effective_label,
-                  label_text=LABEL_TEXT, labels=LABEL_ORDER, is_parent=viewer.role == Role.parent)
+                  label_text=LABEL_TEXT, labels=LABEL_ORDER, is_parent=viewer.role == Role.parent,
+                  goal=child_goal(request, db, target))
 
 
 @router.post("/parent/responses/{response_id}/override")

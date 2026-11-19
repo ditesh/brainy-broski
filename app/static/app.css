@@ -185,3 +185,21 @@ input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-of
 .avatar-pick input:focus-visible + span { outline: 3px solid var(--sun); outline-offset: 2px; }
 .child-reset + .child-reset { margin-top: 20px; padding-top: 16px; border-top: 2px solid var(--line); }
 .child-reset h3 { margin: 0; }
+
+/* weekly goal */
+.goal-card { margin: 12px 0 8px; }
+.goal-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.goal-text { flex: 1 1 200px; } .goal-text h2 { margin: 0 0 4px; } .goal-text p { margin: 2px 0; }
+.goal-ring { width: 108px; height: 108px; flex: none; }
+.goal-ring circle { fill: none; stroke-width: 12; }
+.goal-ring .track { stroke: var(--line); }
+.goal-ring .fill { stroke: var(--accent); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 60px 60px;
+                   transition: stroke-dasharray .6s ease-out; }
+.goal-ring.met .fill { stroke: var(--good); }
+.goal-ring text { fill: var(--fg); font-family: var(--font-ui); }
+.goal-ring .big { font-size: var(--fs-2xl); font-weight: var(--fw-black); }
+.goal-ring .small { font-size: var(--fs-sm); fill: var(--muted); }
+.streak { font-weight: var(--fw-heavy); }
+.goal-change { align-items: flex-end; gap: 8px; margin-top: 8px; }
+.goal-change label { flex: 1 1 160px; }
+@media (prefers-reduced-motion: reduce) { .goal-ring .fill { transition: none; } }
