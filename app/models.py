@@ -1,7 +1,7 @@
 import enum
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -195,3 +195,13 @@ class Technique(Base):
     tag: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(128))
     kid_description: Mapped[str] = mapped_column(Text)
+
+
+class WeeklyGoal(Base):
+    """A child's problems-per-week target, in force from week_start until a later row."""
+    __tablename__ = "weekly_goal"
+    __table_args__ = (UniqueConstraint("user_id", "week_start"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    week_start: Mapped[date] = mapped_column(Date)
+    target: Mapped[int] = mapped_column(Integer)
