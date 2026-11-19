@@ -22,9 +22,11 @@
     <a class="brand" href="/"><img src="/icon.svg?d={{ today_key }}" alt="" title="{{ today_symbol }}"> Brainy Broski</a>
     {% if user %}
     <nav>
-      {% if user.role.value == "parent" %}<a href="/parent">📚 Papers</a>{% else %}<a href="/practice">🚀 Practice</a>{% endif %}
-      <a href="/progress">📈 Progress</a>
-      <a href="/account">{{ user.avatar or ("🙂" if user.role.value == "child" else "⚙️") }} {{ "Me" if user.role.value == "child" else "Account" }}</a>
+      {% set path = request.url.path %}
+      {% macro tab(href, label, match) %}<a href="{{ href }}"{% if path.startswith(match) %} aria-current="page"{% endif %}>{{ label }}</a>{% endmacro %}
+      {% if user.role.value == "parent" %}{{ tab("/parent", "📚 Papers", "/parent") }}{% else %}{{ tab("/practice", "🚀 Practice", "/practice") }}{% endif %}
+      {{ tab("/progress", "📈 Progress", "/progress") }}
+      {{ tab("/account", (user.avatar or ("🙂" if user.role.value == "child" else "⚙️")) ~ " " ~ ("Me" if user.role.value == "child" else "Account"), "/account") }}
       <form method="post" action="/logout" class="inline"><button class="link">Log out {{ user.display_name }}</button></form>
     </nav>
     {% endif %}
