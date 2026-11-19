@@ -54,6 +54,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(256))
     session_gen: Mapped[int | None] = mapped_column(Integer, nullable=True)  # bumped to sign out other devices
     profile: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # a child's fun "all about me" answers
+    buddy_tag: Mapped[str | None] = mapped_column(String(64), nullable=True)  # the pet shown on his home page
+    sound_on: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # None means on
 
     @property
     def avatar(self) -> str:
@@ -205,3 +207,15 @@ class WeeklyGoal(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     week_start: Mapped[date] = mapped_column(Date)
     target: Mapped[int] = mapped_column(Integer)
+
+
+class PetBonus(Base):
+    """Extra growth for one pet: the bonus egg for meeting a week's goal (one per week)."""
+    __tablename__ = "pet_bonus"
+    __table_args__ = (UniqueConstraint("user_id", "week_start"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    tag: Mapped[str] = mapped_column(String(64))
+    amount: Mapped[int] = mapped_column(Integer)
+    week_start: Mapped[date] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
