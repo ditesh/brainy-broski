@@ -142,3 +142,33 @@ def test_backfill_extracts_figures_for_old_questions(db, settings, imported_pape
     n = backfill_figures(session_factory, settings)
     db.expire_all()
     assert n == 20 and all(q.figure_paths == [] for q in db.query(PaperQuestion))
+
+
+def test_merge_joins_touching_pieces():
+    import pymupdf as fitz
+    from app.pdf.render import _merge
+    out = _merge([fitz.Rect(384, 88, 551, 214), fitz.Rect(361, 214, 432, 285), fitz.Rect(10, 10, 20, 20)])
+    assert sorted(tuple(r) for r in out) == [(10, 10, 20, 20), (361, 88, 551, 285)]
+
+
+def test_merge_chains_through_a_middle_piece():
+    import pymupdf as fitz
+    from app.pdf.render import _merge
+    out = _merge([fitz.Rect(0, 0, 10, 10), fitz.Rect(40, 0, 50, 10), fitz.Rect(12, 0, 38, 10)])
+    assert [tuple(r) for r in out] == [(0, 0, 50, 10)]
+
+
+def test_figure_includes_its_labels(tmp_path):
+    import pymupdf as fitz
+    from app.pdf.render import extract_figures
+    doc = fitz.open()
+    page = doc.new_page()
+    page.draw_rect(fitz.Rect(100, 100, 200, 180), color=(0, 0, 0), width=1)
+    page.insert_text((205, 145), "5 cm", fontsize=10)  # label just right of the drawing
+    path = tmp_path / "f.pdf"
+    doc.save(path)
+    figs = extract_figures(path, [[1, 50, 60, 500, 300]], tmp_path / "out", "q")
+    assert len(figs) == 1
+    from PIL import Image
+    w, _ = Image.open(figs[0]).size
+    assert w > (200 - 100 + 25) * 200 / 72  # wider than the box alone: the label came along

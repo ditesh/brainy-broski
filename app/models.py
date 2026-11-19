@@ -70,6 +70,9 @@ class SourcePdf(Base):
 
     @property
     def label(self) -> str:
+        years = sorted({s.get("year") for s in (self.structure or {}).get("sections", []) if s.get("year")})
+        if len(years) > 1:
+            return f"{self.contest} {years[0]}–{years[-1]}"
         return f"{self.contest} {self.year}" if self.year else f"{self.contest} (year unknown)"
 
 
@@ -81,6 +84,7 @@ class Paper(Base):
     language: Mapped[str] = mapped_column(String(8), default="en")
     duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     published: Mapped[bool] = mapped_column(Boolean, default=False)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)  # only when the PDF holds several years
     source_pdf: Mapped[SourcePdf] = relationship(back_populates="papers")
     questions: Mapped[list["PaperQuestion"]] = relationship(
         back_populates="paper", order_by="PaperQuestion.number")
@@ -88,7 +92,13 @@ class Paper(Base):
     @property
     def title(self) -> str:
         s = self.source_pdf
-        return f"{s.contest} {s.year} {self.category}" if s.year else f"{s.contest} {self.category}"
+        year = self.year or s.year
+        return f"{s.contest} {year} {self.category}" if year else f"{s.contest} {self.category}"
+
+    @property
+    def choice_key(self) -> str:
+        """How this paper's section is named when choosing what to import."""
+        return f"{self.category} · {self.year}" if self.year else self.category
 
 
 class Problem(Base):
@@ -113,6 +123,8 @@ class PaperQuestion(Base):
     crop_paths: Mapped[list] = mapped_column(JSON, default=list)
     crop_boxes: Mapped[list] = mapped_column(JSON, default=list)
     figure_paths: Mapped[list | None] = mapped_column(JSON(none_as_null=True), nullable=True)  # None = not extracted yet
+    penalty: Mapped[int | None] = mapped_column(Integer, nullable=True)  # points lost for a wrong answer
+    show_original: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # show the crop, not the text
     paper: Mapped[Paper] = relationship(back_populates="questions")
     problem: Mapped[Problem] = relationship()
 

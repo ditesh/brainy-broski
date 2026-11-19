@@ -18,6 +18,11 @@
     <div class="qtext preview">{{ question_html(q.problem.transcription, q.figure_paths) }}</div>
     <button>Save text</button>
   </form>
+  <form hx-post="/parent/questions/{{ q.id }}/display" hx-target="#q{{ q.id }}" hx-swap="outerHTML" hx-trigger="change" style="margin-top:8px">
+    <label class="choice"><input type="checkbox" name="show_original" {% if q.show_original %}checked{% endif %}>
+      <span>Show the original picture instead of the text <span class="muted">(for questions where the choices are pictures)</span></span></label>
+    <noscript><button>Save</button></noscript>
+  </form>
   {% if error %}{{ alert("error", "Hmm, that didn't work", error) }}{% endif %}
   <form hx-post="/parent/questions/{{ q.id }}" hx-target="#q{{ q.id }}" hx-swap="outerHTML" class="row" style="margin-top:8px">
     <label style="flex:1 1 120px">Answer <input name="answer" value="{{ q.problem.answer }}"></label>
@@ -25,6 +30,7 @@
       <select name="answer_type">{% for t in answer_types %}<option value="{{ t.value }}" {% if t == q.problem.answer_type %}selected{% endif %}>{{ t.value }}</option>{% endfor %}</select>
     </label>
     <label style="flex:0 1 80px">Points <input name="points" type="number" min="0" value="{{ q.points }}"></label>
+    <label style="flex:0 1 110px">Lose if wrong <input name="penalty" type="number" min="0" value="{{ q.penalty or 0 }}"></label>
     <label style="flex:1 1 100%">Techniques (comma separated) <input name="tags" value="{{ q.problem.tags | join(', ') }}"></label>
     <button>Save</button>
   </form>

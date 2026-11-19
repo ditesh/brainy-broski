@@ -62,7 +62,8 @@ def _lines(page: fitz.Page) -> list[list[tuple]]:
     return lines
 
 
-def _anchor_in_line(line: list[tuple], left_margin: float) -> int | None:
+def _anchor_in_line(line: list[tuple], left_margin: float) -> tuple[int, bool] | None:
+    """(question number, labelled?) if this line starts a question."""
     first = line[0]
     if first[0] > left_margin + 12:
         return None
@@ -70,15 +71,15 @@ def _anchor_in_line(line: list[tuple], left_margin: float) -> int | None:
     if t0.lower().rstrip(".:") in LABEL_WORDS and len(line) > 1:
         m = NUM_RE.match(line[1][4].strip())
         if m:
-            return int(m.group(1))
+            return int(m.group(1)), True
     m = re.match(r"^(\d{1,3})[.)]$", t0)  # bare "12." at the left margin
     if m:
-        return int(m.group(1))
+        return int(m.group(1)), False
     return None
 
 
 def find_anchors(pdf_path: Path, pages: list[int]) -> list[Anchor]:
-    anchors: list[Anchor] = []
+    found: list[tuple[Anchor, bool]] = []
     with fitz.open(pdf_path) as doc:
         for pno in sorted(pages):
             page = doc[pno - 1]
@@ -87,12 +88,18 @@ def find_anchors(pdf_path: Path, pages: list[int]) -> list[Anchor]:
                 continue
             left = min(ln[0][0] for ln in lines)
             for ln in lines:
-                n = _anchor_in_line(ln, left)
-                if n is None:
-                    continue
-                if anchors and n <= anchors[-1].number:
-                    continue  # keep a strictly increasing sequence
-                anchors.append(Anchor(number=n, page=pno, y=ln[0][1]))
+                hit = _anchor_in_line(ln, left)
+                if hit is not None:
+                    found.append((Anchor(number=hit[0], page=pno, y=ln[0][1]), hit[1]))
+    # If the paper labels its questions ("Question 12"), a line that merely starts with "13." is
+    # part of a question's text, not a new question.
+    if any(labelled for _, labelled in found):
+        found = [f for f in found if f[1]]
+    anchors: list[Anchor] = []
+    for a, _ in found:
+        if anchors and a.number <= anchors[-1].number:
+            continue  # keep a strictly increasing sequence
+        anchors.append(a)
     return anchors
 
 
@@ -199,6 +206,11 @@ MIN_FIG_W, MIN_FIG_H = 40.0, 30.0
 THIN = 3.0  # lines thinner than this (fraction bars, rules, underlines) are not figures
 
 
+def _gap(a: fitz.Rect, b: fitz.Rect) -> float:
+    """How far apart two rectangles are (0 if they overlap)."""
+    return max(0.0, b.x0 - a.x1, a.x0 - b.x1) + max(0.0, b.y0 - a.y1, a.y0 - b.y1)
+
+
 def _merge(rects: list[fitz.Rect], gap: float = 6.0) -> list[fitz.Rect]:
     rects = [fitz.Rect(r) for r in rects]
     changed = True
@@ -206,9 +218,9 @@ def _merge(rects: list[fitz.Rect], gap: float = 6.0) -> list[fitz.Rect]:
         changed = False
         out: list[fitz.Rect] = []
         for r in rects:
-            for o in out:
+            for i, o in enumerate(out):
                 if (fitz.Rect(o.x0 - gap, o.y0 - gap, o.x1 + gap, o.y1 + gap)).intersects(r):
-                    o |= r
+                    out[i] = o | r  # `o |= r` would build a new Rect and leave the list unchanged
                     changed = True
                     break
             else:
@@ -238,12 +250,14 @@ def extract_figures(pdf_path: Path, boxes: list[list], out_dir: Path, prefix: st
             figs = [r for r in _merge(parts) if r.width >= MIN_FIG_W and r.height >= MIN_FIG_H]
             # pull in labels (A, B, 5 cm…) that sit on or just around the drawing
             words = page.get_text("words", clip=clip)
-            for f in figs:
-                halo = fitz.Rect(f.x0 - 18, f.y0 - 18, f.x1 + 18, f.y1 + 18)
-                for w in words:
+            for i in range(len(figs)):
+                # nearest words first, so "5" joins before "cm" and pulls it in too
+                base = figs[i]
+                for w in sorted(words, key=lambda w: _gap(base, fitz.Rect(w[:4]))):
                     wr = fitz.Rect(w[:4])
-                    if wr in halo and len(w[4]) <= 6:
-                        f |= wr
+                    f = figs[i]
+                    if wr in fitz.Rect(f.x0 - 18, f.y0 - 18, f.x1 + 18, f.y1 + 18) and len(w[4]) <= 6:
+                        figs[i] = f | wr
             for f in sorted(figs, key=lambda r: (round(r.y0), r.x0)):
                 f = fitz.Rect(f.x0 - 3, f.y0 - 3, f.x1 + 3, f.y1 + 3) & page.rect
                 p = out_dir / f"{prefix}-fig{len(paths) + 1}.png"

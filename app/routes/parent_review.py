@@ -61,7 +61,8 @@ def review(paper_id: int, request: Request, user: User = Depends(require_parent)
 
 @router.post("/parent/questions/{pq_id}")
 def update_question(pq_id: int, request: Request, answer: str = Form(...), answer_type: AnswerType = Form(...),
-                    points: int = Form(...), tags: str = Form(""), user: User = Depends(require_parent),
+                    points: int = Form(...), penalty: int = Form(0), tags: str = Form(""),
+                    user: User = Depends(require_parent),
                     db: Session = Depends(get_db)):
     q = _get_pq(db, pq_id)
     p = q.problem
@@ -70,6 +71,16 @@ def update_question(pq_id: int, request: Request, answer: str = Form(...), answe
     p.tags = [t for t in (x.strip() for x in tags.split(",")) if t in TECHNIQUE_TAGS][:3]
     p.verified, p.reference_solution = None, None  # answer may have changed; re-verify later
     q.points = max(0, points)
+    q.penalty = abs(penalty) or None
+    db.commit()
+    return _card(request, db, q)
+
+
+@router.post("/parent/questions/{pq_id}/display")
+def update_display(pq_id: int, request: Request, show_original: str = Form(""),
+                   user: User = Depends(require_parent), db: Session = Depends(get_db)):
+    q = _get_pq(db, pq_id)
+    q.show_original = bool(show_original)
     db.commit()
     return _card(request, db, q)
 

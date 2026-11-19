@@ -11,6 +11,12 @@ class Part(BaseModel):
     points: int
     first_question: int
     last_question: int
+    wrong_points: int = 0  # points lost for a wrong answer (SASMO Section A: 1); blanks never lose points
+
+    @field_validator("wrong_points")
+    @classmethod
+    def _non_negative(cls, v: int) -> int:
+        return abs(v)
 
 
 class Section(BaseModel):
@@ -19,6 +25,9 @@ class Section(BaseModel):
     first_page: int
     last_page: int
     parts: list[Part] = Field(default_factory=list)
+    year: int | None = None  # set when one PDF holds several years' papers
+    solutions_first_page: int | None = None  # worked solutions for this section, if the PDF has them
+    solutions_last_page: int | None = None
 
 
 class AnswerEntry(BaseModel):
@@ -29,6 +38,7 @@ class AnswerEntry(BaseModel):
 class AnswerKey(BaseModel):
     category: str
     page: int
+    year: int | None = None
     answers: list[AnswerEntry]
 
 
@@ -42,6 +52,7 @@ class QuestionAnalysis(BaseModel):
     transcription: str
     answer_type: AnswerType
     tags: list[str] = Field(default_factory=list)
+    picture_based: bool = False  # the question only makes sense as the original picture
 
     @field_validator("tags")
     @classmethod

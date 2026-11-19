@@ -27,10 +27,10 @@
 {% endif %}
 {% if papers %}
   <h2>Imported papers</h2>
-  <ul>{% for p in papers %}<li><a href="/parent/papers/{{ p.id }}/review">Review {{ p.category }}</a>
+  <ul>{% for p in papers %}<li><a href="/parent/papers/{{ p.id }}/review">Review {{ p.choice_key }}</a>
     {% if p.published %}<span class="chip">published</span>{% else %}<span class="chip unsure">needs checking</span>{% endif %}</li>{% endfor %}</ul>
 {% endif %}
-{% set imported = papers | map(attribute="category") | list %}
+{% set imported = papers | map(attribute="choice_key") | list %}
 {% set more = categories | reject("in", imported) | list %}
 {% if src.status.value == "done" and more %}
   <h2>Import more levels</h2>

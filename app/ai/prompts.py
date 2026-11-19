@@ -1,20 +1,31 @@
 """System prompts. Child-facing text must be short, friendly and jargon-free."""
 
 STRUCTURE_SYSTEM = """You are reading the pages of a past maths olympiad paper (for example IMONST, SASMO, \
-Kangaroo or ASMO). Each image is one page, in order, starting at page 1.
+Kangaroo or ASMO). Each image is one page, in order, starting at page 1. Page numbers mean these \
+image positions, not the numbers printed on the pages.
 
 Work out the layout so a program can split it into questions:
 - sections: each separate paper inside the PDF. A PDF often holds several categories (Primary, \
-Junior, Senior; or grade levels) and sometimes several languages (English and Malay). Give each \
-section's category name exactly as printed, its language ("en" for English, "ms" for Malay, \
-"other" otherwise), and its first and last page numbers.
+Junior, Senior; or grade levels) and sometimes several languages (English and Malay). Some books \
+hold several years of the same category (for example "SASMO 2019 Grade 8" and "SASMO 2020 Grade \
+8"): give each year its own section with its year. Give each section's category name exactly as \
+printed (the same name for every year of the same level), its language ("en" for English, "ms" \
+for Malay, "other" otherwise), its year if the PDF holds more than one year, and the first and \
+last page numbers of its QUESTION pages only. Leave out covers, introductions, strategy notes and \
+worked-solution pages. If the PDF has worked solutions for a section, give their first and last \
+pages as solutions_first_page and solutions_last_page (otherwise null).
 - parts: within a section, the groups of questions with their point value (for example \
-"Part A (1 point each)" covers questions 1-5 worth 1 point). If the paper has no parts, give one \
-part covering all questions with the points printed, or 1 if none are printed.
+"Part A (1 point each)" covers questions 1-5 worth 1 point). If a wrong answer loses points (for \
+example "Incorrect answer - minus 1 point"), give that as wrong_points (1); otherwise 0. If the \
+paper has no parts, give one part covering all questions with the points printed, or 1 if none \
+are printed.
 - year: the year of the contest as printed on the paper (for example 2021), or null if no year is \
-printed.
-- answer_keys: the pages listing official answers, one entry per category, with each question \
-number and its answer exactly as printed (a number, a fraction like 3/4, or a letter A-E).
+printed. If the PDF holds several years, give the earliest.
+- answer_keys: the official answers, one entry per category (and per year, with its year, when \
+there are several), with each question number and its answer exactly as printed (a number, a \
+fraction like 3/4, or a letter A-E). Answers may be on an answer-key page or at the end of each \
+worked solution (for example "Answer: (B)" means B); collect them from wherever they are, and \
+give the page where they start.
 
 Only report what is on the pages. Do not solve any questions."""
 
@@ -29,7 +40,11 @@ lines as "(A) ...", "(B) ..." and so on. Do not include the question number.
 - answer_type: "mcq" if the question offers lettered choices (A-E); "fraction" if the answer is \
 naturally a fraction or decimal; "integer" if it is a whole number; "text" otherwise.
 - tags: one to three technique tags, chosen ONLY from the list given in the message, that a \
-student needs to solve this question. Most important first."""
+student needs to solve this question. Most important first.
+- picture_based: true if the question cannot be followed from text with its pictures placed \
+separately, for example when the answer choices are themselves pictures (pick the right cube, \
+net, shape or graph), or the question is mostly one big diagram with labels throughout. \
+Otherwise false."""
 
 SOLVE_SYSTEM = """You are an expert maths olympiad coach. Solve the question in the image.
 

@@ -12,7 +12,7 @@ from app.auth import require_parent
 from app.db import get_db
 from app.fetch import FetchError, fetch_pdf
 from app.importer.delete import delete_source, deletion_summary
-from app.importer.pipeline import detect_structure, run_import
+from app.importer.pipeline import choice_keys, detect_structure, run_import
 from app.importer.year import UNKNOWN_YEAR, guess_year
 from app.models import ImportStatus, Paper, SourcePdf, User
 from app.web import render
@@ -34,14 +34,7 @@ def import_form(request: Request, user: User = Depends(require_parent)):
 
 
 def _english_categories(src: SourcePdf) -> list[str]:
-    if not src.structure:
-        return []
-    st = PdfStructure.model_validate(src.structure)
-    seen: list[str] = []
-    for s in st.sections:
-        if s.language == "en" and s.category not in seen:
-            seen.append(s.category)
-    return seen
+    return choice_keys(src)
 
 
 def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int = 200, error: str | None = None):

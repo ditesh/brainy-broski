@@ -55,7 +55,8 @@ def practice_home(request: Request, contest: str = "", level: str = "", user: Us
             level = last.category
         else:
             level = "Junior" if "Junior" in choices else (choices[0] if choices else "")
-    shown = [p for p in papers if p.source_pdf.contest == contest and p.category == level]
+    shown = sorted((p for p in papers if p.source_pdf.contest == contest and p.category == level),
+                   key=lambda p: -(p.year or p.source_pdf.year or 0))
     in_progress = [a for a in attempts if a.submitted_at is None]
     done = [a for a in attempts if a.submitted_at is not None][:10]
     from app import daily

@@ -63,6 +63,8 @@ def submit(db: Session, attempt: Attempt) -> Attempt:
         r.correct_first = is_correct(r.first_answer, q.problem.answer, q.problem.answer_type)
         if r.correct_first:
             score += q.points
+        else:
+            score -= q.penalty or 0  # negative marking (e.g. SASMO Section A); blanks never lose points
     attempt.score, attempt.max_score, attempt.submitted_at = score, max_score, utcnow()
     db.commit()
     return attempt

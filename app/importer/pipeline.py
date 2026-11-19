@@ -1,5 +1,6 @@
 """PDF -> papers, questions and problems. Runs in a background task with its own session."""
 import logging
+import re
 from pathlib import Path
 
 import pymupdf as fitz
@@ -11,6 +12,7 @@ from app.ai.schemas import PageBoxes, PdfStructure, QuestionAnalysis, Section
 from app.answers import normalise
 from app.config import Settings
 from app.importer.dedupe import link_duplicates
+from app.importer.solutions import answers_from_solutions
 from app.models import FollowupResponse, ImportStatus, Paper, PaperQuestion, Problem, Response, SourcePdf
 from app.pdf.render import (CropBox, crop_box, crop_questions, extract_figures, find_anchors, has_text_layer,
                             render_pages)
@@ -55,18 +57,54 @@ def detect_structure(source_pdf_id: int, db: Session, ai: AIClient, settings: Se
     db.commit()
 
 
-def _points_for(section: Section, n: int) -> tuple[str, int]:
+def _points_for(section: Section, n: int) -> tuple[str, int, int]:
+    """(part name, points for a right answer, points lost for a wrong one)."""
     for part in section.parts:
         if part.first_question <= n <= part.last_question:
-            return part.name, part.points
-    return "", 1
+            return part.name, part.points, part.wrong_points
+    return "", 1, 0
 
 
-def _answers_for(structure: PdfStructure, category: str) -> dict[int, str]:
-    for key in structure.answer_keys:
-        if key.category.strip().casefold() == category.strip().casefold():
-            return {e.question: e.answer.strip() for e in key.answers}
-    return {}
+def _answers_for(structure: PdfStructure, section: Section) -> dict[int, str]:
+    same = lambda a, b: a.strip().casefold() == b.strip().casefold()
+    keys = [k for k in structure.answer_keys if same(k.category, section.category)]
+    if section.year is not None and any(k.year == section.year for k in keys):
+        keys = [k for k in keys if k.year == section.year]
+    return {e.question: e.answer.strip() for e in keys[0].answers} if keys else {}
+
+
+def _english(structure: PdfStructure) -> list[Section]:
+    return [s for s in structure.sections if s.language == "en"]
+
+
+def _multi_year(structure: PdfStructure) -> bool:
+    return len({s.year for s in _english(structure) if s.year}) > 1
+
+
+def section_key(section: Section, multi_year: bool) -> str:
+    """The name a parent ticks to import this section: the level, plus the year if the PDF has several."""
+    return f"{section.category} · {section.year}" if multi_year and section.year else section.category
+
+
+def choice_keys(src: SourcePdf) -> list[str]:
+    if not src.structure:
+        return []
+    st = PdfStructure.model_validate(src.structure)
+    multi = _multi_year(st)
+    keys: list[str] = []
+    for s in _english(st):
+        k = section_key(s, multi)
+        if k not in keys:
+            keys.append(k)
+    return keys
+
+
+def crop_dir(settings: Settings, paper: Paper) -> Path:
+    # the level name comes from the PDF via Claude: keep it to a safe folder name
+    name = re.sub(r"[^A-Za-z0-9]+", "-", paper.category).strip("-") or "paper"
+    if paper.year:
+        name += f"-{paper.year}"
+    return settings.data_dir / "crops" / str(paper.source_pdf_id) / name
 
 
 def _crops_via_ai(pdf: Path, section: Section, out_dir: Path, ai: AIClient, settings: Settings,
@@ -94,9 +132,9 @@ def _has_history(db: Session, paper: Paper) -> bool:
 
 
 def _clear_unpublished(db: Session, src: SourcePdf, categories: list[str]) -> None:
-    """Remove earlier unpublished imports of these categories, unless the child has used them."""
+    """Remove earlier unpublished imports of these sections, unless the child has used them."""
     for paper in db.query(Paper).filter(Paper.source_pdf_id == src.id).all():
-        if paper.category in categories and not paper.published and not _has_history(db, paper):
+        if paper.choice_key in categories and not paper.published and not _has_history(db, paper):
             problem_ids = {q.problem_id for q in paper.questions}
             for q in list(paper.questions):
                 db.delete(q)
@@ -119,20 +157,29 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
         _clear_unpublished(db, src, categories)
         db.commit()
         text_layer = has_text_layer(pdf)
-        for section in structure.sections:
-            if section.language != "en" or section.category not in categories:
+        multi = _multi_year(structure)
+        for section in _english(structure):
+            if section_key(section, multi) not in categories:
                 continue
             paper = Paper(source_pdf_id=src.id, category=section.category, language="en",
+                          year=section.year if multi else None,
                           duration_min=src.duration_min, published=False)
             db.add(paper)
             db.commit()  # don't hold the SQLite write lock during the slow AI calls below
-            out_dir = settings.data_dir / "crops" / str(src.id) / section.category
+            out_dir = crop_dir(settings, paper)
             if text_layer:
                 anchors = find_anchors(pdf, list(range(section.first_page, section.last_page + 1)))
                 crops = crop_questions(pdf, anchors, out_dir)
             else:
                 crops = _crops_via_ai(pdf, section, out_dir, ai, settings, src.id)
-            answers = _answers_for(structure, section.category)
+            answers = _answers_for(structure, section)
+            if text_layer and section.solutions_first_page and section.solutions_last_page:
+                exact = answers_from_solutions(pdf, section.solutions_first_page, section.solutions_last_page)
+                for n, a in exact.items():
+                    if answers.get(n) not in (None, "", a):
+                        log.warning("answer for Q%s: Claude read %r, solutions say %r; using solutions",
+                                    n, answers[n], a)
+                answers.update(exact)
             for n in sorted(crops):
                 boxes = crops[n]
                 analysis = ai.structured(QuestionAnalysis, ANALYSE_SYSTEM, [b.path for b in boxes],
@@ -143,10 +190,11 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
                                   answer_type=analysis.answer_type, tags=analysis.tags)
                 db.add(problem)
                 db.flush()
-                part, points = _points_for(section, n)
+                part, points, penalty = _points_for(section, n)
                 figs = _figures(pdf, [b.as_list() for b in boxes], out_dir, n, settings) if text_layer else []
                 db.add(PaperQuestion(
-                    paper_id=paper.id, number=n, part=part, points=points, problem_id=problem.id,
+                    paper_id=paper.id, number=n, part=part, points=points, penalty=penalty or None,
+                    show_original=analysis.picture_based or None, problem_id=problem.id,
                     crop_paths=[str(b.path.relative_to(settings.data_dir)) for b in boxes],
                     crop_boxes=[b.as_list() for b in boxes], figure_paths=figs))
                 db.commit()
@@ -179,7 +227,7 @@ def backfill_figures(session_factory, settings: Settings) -> int:
             if not pdf.exists() or not q.crop_boxes or not has_text_layer(pdf):
                 q.figure_paths = []
             else:
-                out_dir = settings.data_dir / "crops" / str(q.paper.source_pdf_id) / q.paper.category
+                out_dir = crop_dir(settings, q.paper)
                 q.figure_paths = _figures(pdf, q.crop_boxes, out_dir, q.number, settings)
             done += 1
         db.commit()

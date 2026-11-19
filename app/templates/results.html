@@ -23,7 +23,7 @@
       {% if r.correct_first %}<span class="good">✓ Nailed it</span>
       {% elif r.correct_first is none %}<span class="muted">Not answered</span>
       {% elif r.correct_retry %}<span class="good">✓ Fixed on second try</span>
-      {% else %}<span class="bad">✗ Not quite</span>{% endif %}
+      {% else %}<span class="bad">✗ Not quite{% if q.penalty %} <small>(−{{ q.penalty }} point{{ "s" if q.penalty != 1 }})</small>{% endif %}</span>{% endif %}
     </div>
     {% if r.correct_first == false %}
       {% with pq = q %}{% include "_question.html" %}{% endwith %}

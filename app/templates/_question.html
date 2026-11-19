@@ -1,6 +1,6 @@
 {# Shows one question: clean text + its pictures, with the original crop one tap away.
    Needs: pq (PaperQuestion). Optional: number. #}
-{% if pq.problem.transcription and pq.problem.transcription.strip() %}
+{% if pq.problem.transcription and pq.problem.transcription.strip() and not pq.show_original %}
   <div class="qtext">{{ question_html(pq.problem.transcription, pq.figure_paths) }}</div>
   <details class="original">
     <summary>See the original</summary>

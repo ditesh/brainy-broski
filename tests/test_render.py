@@ -100,3 +100,32 @@ def test_last_question_trimmed_to_content(sample_pdf, tmp_path):
     with fitz.open(sample_pdf) as d:
         bottom = d[0].search_for("Find angle APC")[0].y1
     assert crops[3][0].y1 - bottom < 20
+
+
+def _text_pdf(tmp_path, lines):
+    import pymupdf as fitz
+    doc = fitz.open()
+    page = doc.new_page()
+    y = 80
+    for text in lines:
+        page.insert_text((72, y), text, fontsize=11)
+        y += 22
+    path = tmp_path / "t.pdf"
+    doc.save(path)
+    return path
+
+
+def test_bare_number_line_inside_labelled_question_is_not_an_anchor(tmp_path):
+    # SASMO 2019 G8 Q12 wraps so that a line starts with "13." before the real "Question 13"
+    from app.pdf.render import find_anchors
+    pdf = _text_pdf(tmp_path, ["Question 12", "Find the value of [x]. For example, [13.54] =", "13.",
+                               "A. 69", "B. 70", "Question 13", "Which fraction is largest?"])
+    assert [a.number for a in find_anchors(pdf, [1])] == [12, 13]
+    a13 = find_anchors(pdf, [1])[1]
+    assert a13.y > 80 + 4 * 22  # the "Question 13" line, not the stray "13."
+
+
+def test_bare_numbers_still_work_without_labels(tmp_path):
+    from app.pdf.render import find_anchors
+    pdf = _text_pdf(tmp_path, ["1. What is 2+2?", "2. What is 3+3?", "3. What is 4+4?"])
+    assert [a.number for a in find_anchors(pdf, [1])] == [1, 2, 3]
