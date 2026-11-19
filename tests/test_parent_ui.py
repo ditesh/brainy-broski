@@ -13,27 +13,27 @@ def _pdf_bytes(tmp_path):
 
 def test_upload_starts_structure_detection(parent_client, fake_ai, db, tmp_path):
     fake_ai.add(PdfStructure, PdfStructure.model_validate(contest_structure_dict()))
-    r = parent_client.post("/parent/import", data={"contest": "IMONST", "year": "2020", "duration_min": "180"},
+    r = parent_client.post("/parent/import", data={"contest": "IMONST1", "year": "2020", "duration_min": "180"},
                            files={"file": ("imonst.pdf", _pdf_bytes(tmp_path), "application/pdf")},
                            follow_redirects=False)
     assert r.status_code == 303
     src = db.query(SourcePdf).one()
     db.refresh(src)
-    assert src.status == ImportStatus.needs_review and src.contest == "IMONST"
+    assert src.status == ImportStatus.needs_review and src.contest == "IMONST1"
     page = parent_client.get(r.headers["location"]).text
     assert 'value="Junior"' in page and 'value="Primary"' in page
     assert page.count('name="categories"') == 2  # Malay section not offered
 
 
 def test_upload_rejects_non_pdf(parent_client):
-    r = parent_client.post("/parent/import", data={"contest": "IMONST", "year": "2020"},
+    r = parent_client.post("/parent/import", data={"contest": "IMONST1", "year": "2020"},
                            files={"file": ("x.pdf", b"hello", "application/pdf")})
     assert r.status_code == 400 and "PDF" in r.text
 
 
 def test_failed_structure_shows_retry(parent_client, fake_ai, db, tmp_path):
     fake_ai.add(PdfStructure, AIError("overloaded"))
-    r = parent_client.post("/parent/import", data={"contest": "IMONST", "year": "2020"},
+    r = parent_client.post("/parent/import", data={"contest": "IMONST1", "year": "2020"},
                            files={"file": ("imonst.pdf", _pdf_bytes(tmp_path), "application/pdf")})
     assert "overloaded" in r.text and "Retry" in r.text
 

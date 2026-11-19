@@ -11,6 +11,7 @@ from app.ai.prompts import ANALYSE_SYSTEM, STRUCTURE_SYSTEM
 from app.ai.schemas import PageBoxes, PdfStructure, QuestionAnalysis, Section
 from app.answers import normalise
 from app.config import Settings
+from app.importer.contest import CONTESTS, UNKNOWN_CONTEST
 from app.importer.dedupe import link_duplicates
 from app.importer.solutions import answers_from_solutions
 from app.models import FollowupResponse, ImportStatus, Paper, PaperQuestion, Problem, Response, SourcePdf
@@ -48,12 +49,16 @@ def detect_structure(source_pdf_id: int, db: Session, ai: AIClient, settings: Se
         from app.importer.year import UNKNOWN_YEAR
         if src.year == UNKNOWN_YEAR and result.year and 1990 <= result.year <= 2100:
             src.year = result.year
+        if src.contest == UNKNOWN_CONTEST and result.contest in CONTESTS:
+            src.contest = result.contest
         src.status = ImportStatus.needs_review
     except Exception as e:  # never leave the import stuck in "running"
         log.exception("structure detection failed")
         db.rollback()
         src = db.get(SourcePdf, source_pdf_id)
         src.status, src.error = ImportStatus.failed, _plain(e)
+    if src.contest == UNKNOWN_CONTEST:
+        src.contest = "Other"  # the parent can correct it under Details
     db.commit()
 
 

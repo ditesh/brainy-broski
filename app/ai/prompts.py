@@ -21,6 +21,9 @@ paper has no parts, give one part covering all questions with the points printed
 are printed.
 - year: the year of the contest as printed on the paper (for example 2021), or null if no year is \
 printed. If the PDF holds several years, give the earliest.
+- contest: which competition this is, exactly one of IMONST1 (Malaysian IMO National Selection \
+Test, first round), IMONST2 (its second round), SASMO, Kangaroo, ASMO; or null if it is none of \
+these or you cannot tell.
 - answer_keys: the official answers, one entry per category (and per year, with its year, when \
 there are several), with each question number and its answer exactly as printed (a number, a \
 fraction like 3/4, or a letter A-E). Answers may be on an answer-key page or at the end of each \

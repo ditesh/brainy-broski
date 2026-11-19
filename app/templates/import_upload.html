@@ -11,8 +11,8 @@
   </label>
   <p class="muted" style="margin:0">— or —</p>
   <label>Choose a PDF file <input type="file" name="file" accept="application/pdf"></label>
-  <label>Contest
-    <select name="contest">{% for c in contests %}<option>{{ c }}</option>{% endfor %}</select>
+  <label>Contest <span class="muted">(optional — we'll work it out from the file)</span>
+    <select name="contest"><option value="">Work it out from the file</option>{% for c in contests %}<option>{{ c }}</option>{% endfor %}</select>
   </label>
   <label>Year <span class="muted">(optional — leave blank and we'll work it out from the file)</span>
     <input type="number" name="year" min="1990" max="{{ this_year + 1 }}" inputmode="numeric" placeholder="e.g. {{ this_year - 1 }}"></label>

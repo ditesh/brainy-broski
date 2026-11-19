@@ -46,6 +46,7 @@ class PdfStructure(BaseModel):
     sections: list[Section]
     answer_keys: list[AnswerKey]
     year: int | None = None  # the contest year printed on the paper, if any
+    contest: str | None = None  # which competition, if recognisable
 
 
 class QuestionAnalysis(BaseModel):
