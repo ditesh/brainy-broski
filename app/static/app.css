@@ -164,3 +164,16 @@ input[type="checkbox"]:checked { background: var(--accent); border-color: var(--
 input[type="checkbox"]:checked::after { transform: rotate(45deg) scale(1); }
 input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) { .choice, input[type="checkbox"], input[type="checkbox"]::after { transition: none; } }
+
+/* account page */
+.stack-section { margin-bottom: 20px; }
+.stack-section h2 { margin-top: 0; }
+.avatars { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.avatars legend { padding: 0; margin-bottom: 8px; }
+.avatar-pick { display: block; cursor: pointer; }
+.avatar-pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.avatar-pick span { display: grid; place-items: center; width: 48px; height: 48px; font-size: var(--fs-2xl);
+  border: 2px solid var(--line); border-radius: 14px; background: var(--card); }
+.avatar-pick:hover span { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.avatar-pick input:checked + span { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--card)); }
+.avatar-pick input:focus-visible + span { outline: 3px solid var(--sun); outline-offset: 2px; }

@@ -24,6 +24,7 @@
     <nav>
       {% if user.role.value == "parent" %}<a href="/parent">📚 Papers</a>{% else %}<a href="/practice">🚀 Practice</a>{% endif %}
       <a href="/progress">📈 Progress</a>
+      <a href="/account">{{ user.avatar or ("🙂" if user.role.value == "child" else "⚙️") }} {{ "Me" if user.role.value == "child" else "Account" }}</a>
       <form method="post" action="/logout" class="inline"><button class="link">Log out {{ user.display_name }}</button></form>
     </nav>
     {% endif %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "macros.html" import alert %}
+{% block back %}<a class="back" href="/">← {{ "Papers" if not is_child else "Practice" }}</a>{% endblock %}
+{% block content %}
+<h1>{% if is_child %}All about me {{ user.avatar }}{% else %}Account{% endif %}</h1>
+
+<section class="card stack-section" aria-labelledby="about-title">
+  <h2 id="about-title">{{ "My profile" if is_child else "Your name" }}</h2>
+  {% if profile_error %}{{ alert("error", profile_error) }}{% endif %}
+  {% if profile_saved %}{{ alert("success", "Saved!") }}{% endif %}
+  <form method="post" action="/account/profile" class="stack">
+    <label>{{ "My name" if is_child else "Name" }}
+      <input name="display_name" value="{{ user.display_name }}" maxlength="40" required autocomplete="nickname"></label>
+    <p class="muted" style="margin:0">You log in as <strong>{{ user.username }}</strong>.</p>
+    {% if is_child %}
+    <fieldset class="avatars">
+      <legend>Pick your picture</legend>
+      <label class="avatar-pick"><input type="radio" name="avatar" value="" {% if not profile.avatar %}checked{% endif %}><span aria-label="None">–</span></label>
+      {% for a in avatars %}
+      <label class="avatar-pick"><input type="radio" name="avatar" value="{{ a }}" {% if profile.avatar == a %}checked{% endif %}><span>{{ a }}</span></label>
+      {% endfor %}
+    </fieldset>
+    {% for field, label, placeholder in text_fields %}
+    <label>{{ label }}
+      <input name="{{ field }}" value="{{ profile.get(field, '') }}" maxlength="60" placeholder="{{ placeholder }}"></label>
+    {% endfor %}
+    <label>Favourite number
+      <input type="number" name="favourite_number" min="0" max="1000000" inputmode="numeric"
+             value="{{ profile.get('favourite_number', '') }}" placeholder="e.g. 7"></label>
+    {% endif %}
+    <button class="primary">Save</button>
+  </form>
+</section>
+
+<section class="card stack-section" aria-labelledby="pw-title">
+  <h2 id="pw-title">Change password</h2>
+  {% if pw_error %}{{ alert("error", pw_error) }}{% endif %}
+  {% if pw_saved %}{{ alert("success", "Password changed!", "Use your new password next time you log in. Any other devices have been logged out.") }}{% endif %}
+  <form method="post" action="/account/password" class="stack">
+    <input type="text" name="username" value="{{ user.username }}" autocomplete="username" hidden>
+    <label>Current password <input type="password" name="current_password" autocomplete="current-password" required></label>
+    <label>New password <span class="muted">(at least 6 characters)</span>
+      <input type="password" name="new_password" autocomplete="new-password" minlength="6" maxlength="128" required></label>
+    <label>New password again <input type="password" name="confirm_password" autocomplete="new-password" minlength="6" maxlength="128" required></label>
+    <button class="primary">Change password</button>
+  </form>
+</section>
+{% endblock %}

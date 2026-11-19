@@ -65,7 +65,7 @@ class NotLoggedIn(Exception):
 def current_user(request: Request, db: Session = Depends(get_db)) -> User:
     uid = request.session.get("uid")
     user = db.get(User, uid) if uid else None
-    if user is None:
+    if user is None or request.session.get("gen", 0) != (user.session_gen or 0):
         raise NotLoggedIn()
     request.state.user = user
     return user
@@ -111,6 +111,7 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
         return render(request, "login.html", status_code=401, error="Wrong username or password.")
     request.session.clear()
     request.session["uid"] = user.id
+    request.session["gen"] = user.session_gen or 0
     return RedirectResponse(home_for(user), status_code=303)
 
 

@@ -37,7 +37,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
     from app.auth import NotLoggedIn, router as auth_router
-    from app.routes import feedback, files, parent_import, parent_review, practice, progress, upload
+    from app.routes import account, feedback, files, parent_import, parent_review, practice, progress, upload
 
     @app.exception_handler(NotLoggedIn)
     def _not_logged_in(request: Request, exc: NotLoggedIn):
@@ -54,6 +54,7 @@ def create_app(settings: Settings | None = None, session_factory: sessionmaker |
     app.include_router(upload.router)
     app.include_router(feedback.router)
     app.include_router(progress.router)
+    app.include_router(account.router)
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon():

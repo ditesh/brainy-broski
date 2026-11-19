@@ -63,7 +63,14 @@ def practice_home(request: Request, contest: str = "", level: str = "", user: Us
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
     return render(request, "practice_home.html", wonder_hidden=request.session.get("wonder_hidden") == today,
                   contests=contests, contest=contest, levels=choices,
-                  level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user))
+                  level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user),
+                  number_fact=_fav_number_fact(user))
+
+
+def _fav_number_fact(user: User) -> str:
+    from app.profile import number_fact
+    n = (user.profile or {}).get("favourite_number")
+    return number_fact(n) if isinstance(n, int) else ""
 
 
 @router.post("/wonder/dismiss")

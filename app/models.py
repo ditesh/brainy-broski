@@ -52,6 +52,12 @@ class User(Base):
     display_name: Mapped[str] = mapped_column(String(64))
     role: Mapped[Role] = mapped_column(Enum(Role))
     password_hash: Mapped[str] = mapped_column(String(256))
+    session_gen: Mapped[int | None] = mapped_column(Integer, nullable=True)  # bumped to sign out other devices
+    profile: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # a child's fun "all about me" answers
+
+    @property
+    def avatar(self) -> str:
+        return (self.profile or {}).get("avatar", "")
 
 
 class SourcePdf(Base):
