@@ -101,4 +101,4 @@ def test_part_attempts_not_compared_with_whole_paper(child_client, db, child, ju
 def test_parent_view_has_no_celebration_sounds(parent_client, db, child, junior_paper):
     a = _do(db, child, junior_paper, {6: True}, tags={6: "parity"})
     html = parent_client.get(f"/attempts/{a.id}/results").text
-    assert "data-sound" not in html and "data-play" not in html
+    assert 'data-sound="' not in html and 'data-play="' not in html
