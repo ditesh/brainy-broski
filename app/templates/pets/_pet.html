@@ -1,0 +1,10 @@
+{# One interactive pet. c: Creature, stage: egg|baby|grown. play: optional animation to run on load. #}
+{% macro pet(c, stage, size=160, interactive=True, play="", sound="", extra_class="") -%}
+<div class="pet-slot {{ extra_class }}" data-tag="{{ c.tag }}" data-stage="{{ stage }}" data-say="{{ c.catchphrase }}"
+     style="--pet-size:{{ size }}px; --pet-main:{{ c.main }}; --pet-dark:{{ c.dark }}"
+     {%- if play %} data-play="{{ play }}"{% endif %}{% if sound %} data-sound="{{ sound }}"{% endif %}
+     {%- if interactive %} tabindex="0" role="button" aria-label="{{ c.name }}, {{ STAGE_LABEL[stage] }}"{% else %} aria-hidden="true"{% endif %}>
+  <span class="bubble" aria-hidden="true"></span>
+  {{ pet_svg(c, stage) }}
+</div>
+{%- endmacro %}

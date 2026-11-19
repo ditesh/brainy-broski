@@ -45,6 +45,10 @@ def question_html(text: str | None, figure_paths: list | None) -> Markup:
 
 TEMPLATES.env.globals["question_html"] = question_html
 
+from app.pets.art import pet_svg  # noqa: E402
+from app.pets.creatures import CREATURES, STAGE_LABEL  # noqa: E402
+TEMPLATES.env.globals.update(pet_svg=pet_svg, CREATURES=CREATURES, STAGE_LABEL=STAGE_LABEL)
+
 
 def render(request: Request, name: str, status_code: int = 200, **ctx):
     from app.daily import fact_for, local_today, symbol_for

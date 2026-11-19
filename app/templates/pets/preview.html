@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "pets/_pet.html" import pet %}
+{% block back %}<a class="back" href="/account">← Account</a>{% endblock %}
+{% block content %}
+<h1>All the pets</h1>
+<p class="muted">Every technique pet at each stage, as your child will see them. Hover, click or tap to play with them.</p>
+<div class="preview-grid">
+{% for c in creatures %}
+  <section class="card preview-row">
+    <h2>{{ c.name }} <span class="muted">· {{ names[c.tag] }}</span></h2>
+    <p class="muted">{{ c.body }} · “{{ c.catchphrase }}”</p>
+    <div class="row preview-stages">
+      {% for st in ("egg", "baby", "grown") %}{{ pet(c, st, size=120) }}{% endfor %}
+    </div>
+  </section>
+{% endfor %}
+</div>
+{% endblock %}
