@@ -11,7 +11,18 @@
     if (!el || !cls) return;
     el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
     clearTimeout(el._playT);
-    if (kind === "hatch") el._playT = setTimeout(function () { el.classList.remove(cls); }, DURATION.hatch + 1200);
+    if (kind === "hatch") el._playT = setTimeout(function () { reveal(el); }, DURATION.hatch);
+  }
+
+  // After hatching, swap the egg for the creature that came out (a <template class="reveal"> next to it).
+  function reveal(el) {
+    el.classList.remove("hatching");
+    var tpl = el.parentNode && el.parentNode.querySelector("template.reveal");
+    if (!tpl) return;
+    var svg = el.querySelector("svg");
+    if (svg) svg.replaceWith(tpl.content.cloneNode(true));
+    el.dataset.stage = "baby";
+    play(el, "happy");
   }
 
   function tickle(el) {

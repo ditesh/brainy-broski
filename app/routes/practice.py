@@ -186,8 +186,12 @@ def attempt_results(attempt_id: int, request: Request, user: User = Depends(requ
     rows = sorted(a.responses, key=lambda r: r.paper_question.number)
     pct = (a.score / a.max_score) if a.max_score else 0
     stars = 3 if pct >= 0.9 else 2 if pct >= 0.6 else 1 if pct >= 0.3 else 0
+    from app import daily
+    from app.pets.celebrate import celebration
+    tz = request.app.state.settings.timezone
+    cel = celebration(db, user, a, daily.local_today(tz), tz)
     return render(request, "results.html", a=a, rows=rows, misses=misses(a), is_owner=a.user_id == user.id,
-                  stars=stars, redo_count=sum(1 for r in a.responses if r.correct_first is False))
+                  stars=stars, redo_count=sum(1 for r in a.responses if r.correct_first is False), cel=cel)
 
 
 @router.post("/attempts/{attempt_id}/redo")

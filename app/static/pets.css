@@ -101,3 +101,13 @@
 .home-top .goal-card { flex: 1 1 260px; margin: 12px 0 8px; }
 .buddy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
          margin: 12px 0 8px; font-size: var(--fs-sm); }
+
+/* results: what you earned */
+.celebrate { margin: 16px 0; }
+.celebrate-goal { text-align: center; border-color: var(--good); }
+.celebrate-title { font-size: var(--fs-xl); font-weight: var(--fw-black); margin: 0; }
+.celebrate-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.celebrate-pet { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.celebrate-pet p { margin: 0; }
+.celebrate-gain { font-size: var(--fs-xl); font-weight: var(--fw-black); color: var(--accent); }
+.new-best { margin: 6px auto 0; }

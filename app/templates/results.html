@@ -1,13 +1,50 @@
 {% extends "base.html" %}
+{% from "pets/_pet.html" import pet %}
 {% block back %}{% if is_owner %}<a class="back" href="/practice">← All papers</a>{% else %}<a class="back" href="/progress?user={{ a.user_id }}">← Progress</a>{% endif %}{% endblock %}
 {% block content %}
 <h1>{{ a.paper.title }}{% if a.redo_of_id %} <span class="chip">🔁 Redo of misses</span>{% endif %}</h1>
-<div class="card scorecard" {% if stars == 3 %}data-confetti{% endif %}>
+<div class="card scorecard" {% if stars == 3 or cel.beat_best %}data-confetti{% endif %}>
   <div class="stars" aria-label="{{ stars }} of 3 stars">{% for i in range(3) %}<span class="star{% if i < stars %} on{% endif %}">★</span>{% endfor %}</div>
   <div class="big">{{ a.score }} / {{ a.max_score }}</div>
   <div class="muted">points</div>
+  {% if cel.beat_best %}<div class="chip done new-best">🏆 New best on this paper!</div>{% endif %}
   <div class="cheer">{% if stars == 3 %}Amazing work! 🎉{% elif stars == 2 %}Great job! 💪{% elif stars == 1 %}Good effort — let's level up! 🌱{% else %}Every mistake is a lesson. Let's dig in! 🔍{% endif %}</div>
 </div>
+
+{% if cel.grew or cel.goal_met_now %}
+<section class="celebrate" aria-label="What you earned">
+  {% if cel.goal_met_now %}
+  <div class="card celebrate-goal" data-play="happy" data-sound="jingle">
+    <p class="celebrate-title">🎯 Goal smashed! 🎉</p>
+    <p>You hit your weekly goal.{% if cel.bonus %} Here's a bonus egg:{% endif %}</p>
+    {% if cel.bonus %}{% set bc = CREATURES[cel.bonus.tag] %}{% set bonus_stage = cel.bonus_stage %}
+    <div class="celebrate-pet">
+      {{ pet(bc, "egg", size=110, play="hatch", sound="crack", extra_class="reveals") }}
+      <template class="reveal">{{ pet_svg(bc, bonus_stage) }}</template>
+      <p><strong>Bonus egg</strong> · +{{ cel.bonus.amount }} for {{ bc.name }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% if cel.grew %}
+  <h2>🐾 Your pets grew!</h2>
+  <div class="celebrate-grid">
+    {% for g in cel.grew %}{% set c = CREATURES[g.tag] %}
+    <div class="card celebrate-pet">
+      {% if g.play == "hatch" %}
+        {{ pet(c, "egg", size=130, play="hatch", sound="crack", extra_class="reveals") }}
+        <template class="reveal">{{ pet_svg(c, g.after) }}</template>
+      {% else %}
+        {{ pet(c, g.after, size=130, play=g.play, sound=g.sound) }}
+      {% endif %}
+      <p class="celebrate-gain">+{{ g.gained }}</p>
+      <p><strong>{{ c.name }}</strong>{% if g.play == "hatch" %} hatched!{% elif g.play == "grow" %} grew up!{% endif %}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
 
 {% set open_misses = misses | selectattr("retry_answer", "none") | list %}
 {% if open_misses and is_owner %}
@@ -57,7 +94,7 @@
 {% endif %}
 {% endblock %}
 {% block scripts %}
-{% if stars == 3 %}
+{% if stars == 3 or cel.beat_best %}
 <script>
 (function () {
   var host = document.querySelector("[data-confetti]");
