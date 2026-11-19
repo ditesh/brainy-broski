@@ -102,3 +102,9 @@ def test_parent_view_has_no_celebration_sounds(parent_client, db, child, junior_
     a = _do(db, child, junior_paper, {6: True}, tags={6: "parity"})
     html = parent_client.get(f"/attempts/{a.id}/results").text
     assert 'data-sound="' not in html and 'data-play="' not in html
+
+
+def test_egg_that_grew_stays_a_mystery(child_client, db, child, junior_paper):
+    a = _do(db, child, junior_paper, {1: True}, tags={1: "parity"})   # weight 1: still an egg
+    html = _results(child_client, a)
+    assert "+1" in html and "Mystery egg" in html and CREATURES["parity"].name not in html

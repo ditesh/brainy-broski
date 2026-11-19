@@ -39,7 +39,7 @@
         {{ pet(c, g.after, size=130, play=g.play, sound=g.sound) }}
       {% endif %}
       <p class="celebrate-gain">+{{ g.gained }}</p>
-      <p><strong>{{ c.name }}</strong>{% if g.play == "hatch" %} hatched!{% elif g.play == "grow" %} grew up!{% endif %}</p>
+      <p>{% if g.after == "egg" %}<strong>Mystery egg</strong> · nearly ready!{% else %}<strong>{{ c.name }}</strong>{% if g.play == "hatch" %} hatched!{% elif g.play == "grow" %} grew up!{% endif %}{% endif %}</p>
     </div>
     {% endfor %}
   </div>
