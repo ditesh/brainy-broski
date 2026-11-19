@@ -47,8 +47,9 @@ def test_next_must_be_local(child_client):
 
 
 def test_me_page_shows_pending(app, child_client, db, child):
-    set_goal(db, child, 15, _today(app))
-    set_goal(db, child, 20, _today(app))
+    from datetime import timedelta
+    set_goal(db, child, 15, _today(app) - timedelta(days=1) if _today(app).weekday() else _today(app))
+    set_goal(db, child, 20, _today(app) if _today(app).weekday() else _today(app) + timedelta(days=1))
     html = child_client.get("/account").text
     assert "0 of 15 this week" in html and "From next week: 20" in html
 

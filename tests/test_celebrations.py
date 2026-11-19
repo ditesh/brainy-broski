@@ -108,3 +108,19 @@ def test_egg_that_grew_stays_a_mystery(child_client, db, child, junior_paper):
     a = _do(db, child, junior_paper, {1: True}, tags={1: "parity"})   # weight 1: still an egg
     html = _results(child_client, a)
     assert "+1" in html and "Mystery egg" in html and CREATURES["parity"].name not in html
+
+
+def test_goal_set_after_the_work_still_gives_the_egg(child_client, db, child, junior_paper):
+    _do(db, child, junior_paper, {1: False, 2: False})
+    html = child_client.post("/goal", data={"target": "2"}).text   # lands on home
+    assert db.query(PetBonus).count() == 1
+    assert "Bonus egg" in html
+    assert "Bonus egg" not in child_client.get("/practice").text   # announced once
+
+
+def test_hatch_reveal_carries_the_new_identity(child_client, db, child, junior_paper):
+    a = _do(db, child, junior_paper, {6: True}, tags={6: "parity"})
+    html = _results(child_client, a)
+    c = CREATURES["parity"]
+    assert (f'<template class="reveal" data-stage="baby" data-name="{c.name}, baby" data-say="{c.catchphrase}">'
+            in html)

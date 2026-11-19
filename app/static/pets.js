@@ -21,7 +21,9 @@
     if (!tpl) return;
     var svg = el.querySelector("svg");
     if (svg) svg.replaceWith(tpl.content.cloneNode(true));
-    el.dataset.stage = "baby";
+    el.dataset.stage = tpl.dataset.stage || "baby";
+    if (tpl.dataset.name) el.setAttribute("aria-label", tpl.dataset.name);
+    if (tpl.dataset.say) el.dataset.say = tpl.dataset.say;
     play(el, "happy");
   }
 

@@ -35,13 +35,16 @@ def set_goal(db: Session, user: User, target: int, today: date) -> WeeklyGoal:
     """The first goal starts this week; a change starts next Monday, so it can't be lowered at the last minute."""
     if not GOAL_MIN <= target <= GOAL_MAX:
         raise ValueError(f"goal must be {GOAL_MIN}-{GOAL_MAX}")
-    has_any = db.query(WeeklyGoal).filter_by(user_id=user.id).count() > 0
-    start = week_start(today) + (timedelta(weeks=1) if has_any else timedelta())
-    row = db.query(WeeklyGoal).filter_by(user_id=user.id, week_start=start).one_or_none()
+    rows = db.query(WeeklyGoal).filter_by(user_id=user.id).all()
+    this = week_start(today)
+    first_today = len(rows) == 1 and rows[0].week_start == this and rows[0].set_on == today
+    # the very first goal starts now, and can be fixed the same day (typed 150 meaning 15)
+    start = this if not rows or first_today else this + timedelta(weeks=1)
+    row = next((r for r in rows if r.week_start == start), None)
     if row is None:
         row = WeeklyGoal(user_id=user.id, week_start=start, target=target)
         db.add(row)
-    row.target = target
+    row.target, row.set_on = target, today
     db.commit()
     return row
 

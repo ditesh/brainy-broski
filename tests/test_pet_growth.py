@@ -157,3 +157,32 @@ def test_buddy_choice_and_default(db, child, junior_paper):
 
 def test_no_buddy_without_hatched_pets(db, child):
     assert buddy(db, child, growth(db, child)) is None
+
+
+def test_retry_in_a_retake_fixes_a_miss(db, child, junior_paper):
+    tag(db, junior_paper, 16, "parity")
+    do_paper(db, child, junior_paper, {16: "W"}, at(WED))
+    b = do_paper(db, child, junior_paper, {16: "W"}, at(WED + timedelta(days=1)))
+    submit_retry(db, b.responses[0], q(junior_paper, 16).problem.answer)
+    assert growth(db, child)["parity"].points == 1
+
+
+def test_settle_survives_a_simultaneous_award(db, child, junior_paper, monkeypatch):
+    import app.pets.growth as g
+    set_goal(db, child, 1, today=WED)
+    do_paper(db, child, junior_paper, {1: "W"}, at(WED))
+    db.add(PetBonus(user_id=child.id, tag="parity", amount=2, week_start=MON))   # the other tab won the race
+    db.commit()
+    monkeypatch.setattr(g, "_bonus_for", lambda db, user, week: None)          # ...after we checked
+    assert settle_week(db, child, WED, TZ) is None
+    assert db.query(PetBonus).count() == 1
+
+
+def test_settle_recent_awards_last_week(db, child, junior_paper):
+    from app.pets.growth import settle_recent
+    from app.models import WeeklyGoal
+    db.add(WeeklyGoal(user_id=child.id, week_start=MON - timedelta(weeks=1), target=1))
+    db.commit()
+    do_paper(db, child, junior_paper, {1: "W"}, at(MON - timedelta(days=3)))
+    settle_recent(db, child, WED, TZ)
+    assert db.query(PetBonus).filter_by(week_start=MON - timedelta(weeks=1)).count() == 1

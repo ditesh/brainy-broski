@@ -76,12 +76,31 @@ def render_home(request: Request, db: Session, user: User, contest: str = "", le
     done = [a for a in attempts if a.submitted_at is not None][:10]
     from app import daily
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
-    return render(request, "practice_home.html", status_code=status_code,
+    new_bonus = _settle_and_announce(request, db, user)
+    return render(request, "practice_home.html", status_code=status_code, new_bonus=new_bonus,
                   wonder_hidden=request.session.get("wonder_hidden") == today, goal=child_goal(request, db, user),
                   buddy=_buddy(db, user),
                   contests=contests, contest=contest, levels=choices,
                   level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user),
                   number_fact=_fav_number_fact(user), **extra)
+
+
+def _settle_and_announce(request: Request, db: Session, user: User):
+    """Give any bonus egg he has earned, and announce each one once (per device) on the home page."""
+    if user.role != Role.child:
+        return None
+    from app import daily
+    from app.models import PetBonus
+    from app.pets.creatures import CREATURES
+    from app.pets.growth import growth, settle_recent
+    tz = request.app.state.settings.timezone
+    settle_recent(db, user, daily.local_today(tz), tz)
+    seen = set(request.session.get("seen_bonus", []))
+    fresh = (db.query(PetBonus).filter(PetBonus.user_id == user.id).order_by(PetBonus.id.desc()).first())
+    if fresh is None or fresh.id in seen:
+        return None
+    request.session["seen_bonus"] = sorted(seen | {fresh.id})[-20:]
+    return {"c": CREATURES[fresh.tag], "amount": fresh.amount, "stage": growth(db, user)[fresh.tag].stage}
 
 
 def _buddy(db: Session, user: User):

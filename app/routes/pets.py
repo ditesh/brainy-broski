@@ -38,6 +38,10 @@ def _page(request: Request, db: Session, user: User, status_code: int = 200, **e
 def my_pets(request: Request, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if user.role != Role.child:
         return RedirectResponse("/parent/pets/preview", status_code=303)
+    from app.daily import local_today
+    from app.pets.growth import settle_recent
+    tz = request.app.state.settings.timezone
+    settle_recent(db, user, local_today(tz), tz)
     return _page(request, db, user)
 
 

@@ -1,7 +1,8 @@
 // Brainy Broski sounds, made in the browser with Web Audio (no files). Silent when <body data-sound-pref="off">.
 (function () {
   "use strict";
-  var ctx = null, queued = null;
+  var ctx = null, queued = null, queuedAt = 0;
+  var QUEUE_MS = 4000;  // a sound waiting for a tap is dropped after this, so it never plays out of place
 
   function enabled() { return document.body && document.body.dataset.soundPref === "on"; }
 
@@ -60,8 +61,10 @@
     var a = audio();
     if (!a) return;
     if (a.state === "suspended") {
-      queued = name;        // the browser waits for a tap; play the latest sound then
-      a.resume().then(function () { if (queued === name && a.state === "running") { queued = null; SOUNDS[name](a); } });
+      queued = name; queuedAt = Date.now();   // the browser waits for a tap; play it then if still fresh
+      a.resume().then(function () {
+        if (queued === name && a.state === "running" && Date.now() - queuedAt < QUEUE_MS) { queued = null; SOUNDS[name](a); }
+      });
       return;
     }
     SOUNDS[name](a);
@@ -70,7 +73,11 @@
   function unlock() {
     var a = enabled() && audio();
     if (!a || a.state !== "suspended") return;
-    a.resume().then(function () { if (queued) { var q = queued; queued = null; SOUNDS[q](a); } });
+    a.resume().then(function () {
+      var q = queued, fresh = Date.now() - queuedAt < QUEUE_MS;
+      queued = null;
+      if (q && fresh) SOUNDS[q](a);
+    });
   }
   document.addEventListener("pointerdown", unlock, { passive: true });
   document.addEventListener("keydown", unlock);

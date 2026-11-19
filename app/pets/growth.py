@@ -9,8 +9,9 @@ Matches technique_table's rule: each problem counts from the first time he answe
 import random
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.goals import goal_status, week_start
@@ -71,7 +72,7 @@ def growth(db: Session, user: User, as_of: datetime | None = None) -> dict[str, 
         elif first.correct_retry:
             add(tags, 1, first.attempt.submitted_at)
         else:
-            later = next((r for r in rs[1:] if r.correct_first), None)
+            later = next((r for r in rs[1:] if r.correct_first or r.correct_retry), None)
             if later is not None:
                 add(tags, 1, later.attempt.submitted_at)
 
@@ -108,7 +109,7 @@ def settle_week(db: Session, user: User, today: date, tz: str) -> PetBonus | Non
     week = week_start(today)
     if not goal_status(db, user, today, tz).met:
         return None
-    if db.query(PetBonus).filter_by(user_id=user.id, week_start=week).count():
+    if _bonus_for(db, user, week) is not None:
         return None
     states = growth(db, user)
     shown = shown_tags(db, user, states) or TAGS
@@ -119,8 +120,22 @@ def settle_week(db: Session, user: User, today: date, tz: str) -> PetBonus | Non
         tag = max(shown, key=lambda t: (states[t].points if states[t].points < GROWN else -1, -shown.index(t)))
     bonus = PetBonus(user_id=user.id, tag=tag, amount=BONUS, week_start=week)
     db.add(bonus)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:  # another request (a second tab) handed it out a moment ago
+        db.rollback()
+        return None
     return bonus
+
+
+def _bonus_for(db: Session, user: User, week: date) -> PetBonus | None:
+    return db.query(PetBonus).filter_by(user_id=user.id, week_start=week).one_or_none()
+
+
+def settle_recent(db: Session, user: User, today: date, tz: str) -> None:
+    """Hand out any bonus egg earned this week or last week, whichever page he opens next."""
+    settle_week(db, user, today - timedelta(weeks=1), tz)
+    settle_week(db, user, today, tz)
 
 
 def buddy(db: Session, user: User, states: dict[str, PetState]) -> str | None:

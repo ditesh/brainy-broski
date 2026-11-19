@@ -21,7 +21,7 @@
     {% if cel.bonus %}{% set bc = CREATURES[cel.bonus.tag] %}{% set bonus_stage = cel.bonus_stage %}
     <div class="celebrate-pet">
       {{ pet(bc, "egg", size=110, play="hatch", sound="crack", extra_class="reveals") }}
-      <template class="reveal">{{ pet_svg(bc, bonus_stage) }}</template>
+      <template class="reveal" data-stage="{{ bonus_stage }}" data-name="{{ bc.name }}, {{ STAGE_LABEL[bonus_stage] }}" data-say="{{ bc.catchphrase }}">{{ pet_svg(bc, bonus_stage) }}</template>
       <p><strong>Bonus egg</strong> · +{{ cel.bonus.amount }} for {{ bc.name }}</p>
     </div>
     {% endif %}
@@ -34,7 +34,7 @@
     <div class="card celebrate-pet">
       {% if g.play == "hatch" %}
         {{ pet(c, "egg", size=130, play="hatch", sound="crack", extra_class="reveals") }}
-        <template class="reveal">{{ pet_svg(c, g.after) }}</template>
+        <template class="reveal" data-stage="{{ g.after }}" data-name="{{ c.name }}, {{ STAGE_LABEL[g.after] }}" data-say="{{ c.catchphrase }}">{{ pet_svg(c, g.after) }}</template>
       {% else %}
         {{ pet(c, g.after, size=130, play=g.play, sound=g.sound) }}
       {% endif %}

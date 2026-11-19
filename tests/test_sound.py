@@ -44,3 +44,8 @@ def test_sound_js_defines_all_sounds():
 
 def test_sound_js_loaded(child_client):
     assert "/static/sound.js" in child_client.get("/practice").text
+
+
+def test_waiting_sounds_expire():
+    js = Path("app/static/sound.js").read_text()
+    assert js.count("Date.now() - queuedAt < QUEUE_MS") == 2

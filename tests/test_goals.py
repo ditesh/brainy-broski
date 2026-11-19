@@ -44,11 +44,11 @@ def test_first_goal_applies_now(db, child):
 
 def test_later_change_applies_next_week(db, child):
     set_goal(db, child, 15, today=WED)
-    set_goal(db, child, 20, today=WED)
+    set_goal(db, child, 20, today=WED + timedelta(days=1))
     nxt = MON + timedelta(weeks=1)
     assert target_for(db, child, MON) == 15 and target_for(db, child, nxt) == 20
     assert pending_goal(db, child, WED) == 20
-    set_goal(db, child, 25, today=WED)
+    set_goal(db, child, 25, today=WED + timedelta(days=1))
     assert pending_goal(db, child, WED) == 25
     assert db.query(WeeklyGoal).filter_by(user_id=child.id, week_start=nxt).count() == 1
 
@@ -117,3 +117,9 @@ def test_goal_status(db, child, junior_paper):
     _meet(db, child, junior_paper, MON)
     s = goal_status(db, child, WED, TZ)
     assert (s.target, s.done, s.met, s.streak, s.pending) == (2, 2, True, 1, None)
+
+
+def test_first_goal_can_be_fixed_the_same_day(db, child):
+    set_goal(db, child, 150, today=WED)
+    set_goal(db, child, 15, today=WED)
+    assert target_for(db, child, MON) == 15 and pending_goal(db, child, WED) is None

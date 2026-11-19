@@ -3,6 +3,16 @@
 <h1>Hi {% if user.avatar %}{{ user.avatar }} {% endif %}{{ user.display_name }}!{% if not user.avatar %} 👋{% endif %}</h1>
 <p class="hello">Pick a challenge and show those problems who's boss. {% include "_sound_toggle.html" %}</p>
 {% if number_fact %}<p class="muted fav-number">🔢 Your number: {{ number_fact }}</p>{% endif %}
+{% if new_bonus %}{% from "pets/_pet.html" import pet %}
+<section class="card celebrate-goal bonus-banner">
+  <p class="celebrate-title">🥚 Bonus egg!</p>
+  <p>You smashed your weekly goal, so here's a bonus egg: +{{ new_bonus.amount }} for {{ new_bonus.c.name }}.</p>
+  <div class="celebrate-pet">
+    {{ pet(new_bonus.c, "egg", size=110, play="hatch", sound="crack", extra_class="reveals") }}
+    <template class="reveal" data-stage="{{ new_bonus.stage }}" data-name="{{ new_bonus.c.name }}, {{ STAGE_LABEL[new_bonus.stage] }}" data-say="{{ new_bonus.c.catchphrase }}">{{ pet_svg(new_bonus.c, new_bonus.stage) }}</template>
+  </div>
+</section>
+{% endif %}
 {% if goal or buddy %}
 <div class="home-top">
   {% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}

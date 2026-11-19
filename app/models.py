@@ -207,6 +207,7 @@ class WeeklyGoal(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     week_start: Mapped[date] = mapped_column(Date)
     target: Mapped[int] = mapped_column(Integer)
+    set_on: Mapped[date | None] = mapped_column(Date, nullable=True)  # local day it was last set
 
 
 class PetBonus(Base):
