@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "macros.html" import alert %}
+{% from "pets/_pet.html" import pet %}
+{% block back %}<a class="back" href="/practice">← Practice</a>{% endblock %}
+{% block content %}
+<h1>My pets 🐾</h1>
+<p class="hello">Every maths trick has its own pet. Solve problems that use a trick and its pet grows — harder problems make it grow faster!</p>
+{% if error %}{{ alert("error", error) }}{% endif %}
+{% if saved %}{{ alert("success", saved ~ " is your buddy now!") }}{% endif %}
+{% if not pets %}
+<p class="muted">Your pets will appear here once there are papers to practise.</p>
+{% endif %}
+<div class="pet-grid">
+{% for p in pets %}
+  <article class="card pet-card{% if p.c.tag == buddy %} is-buddy{% endif %}">
+    {{ pet(p.c, p.state.stage, size=130) }}
+    <h2>{% if p.state.stage == "egg" %}Mystery egg{% else %}{{ p.c.name }}{% endif %}</h2>
+    <p class="pet-technique">{{ p.technique }}</p>
+    <div class="pet-bar" role="progressbar" aria-valuemin="0" aria-valuemax="15" aria-valuenow="{{ p.state.points }}"><i style="width:{{ p.pct }}%"></i></div>
+    <p class="muted pet-progress">{{ p.progress }}</p>
+    <details>
+      <summary>About this trick</summary>
+      <p>{{ p.about }}</p>
+      <p class="muted">Right first time: +1 to +3 (harder questions give more). Fixed a miss later: +1.</p>
+    </details>
+    {% if p.c.tag == buddy %}<p class="chip done">⭐ Your buddy</p>
+    {% elif p.state.stage != "egg" %}
+    <form method="post" action="/pets/buddy"><input type="hidden" name="tag" value="{{ p.c.tag }}"><button>Make my buddy</button></form>
+    {% endif %}
+  </article>
+{% endfor %}
+</div>
+{% if mystery %}<p class="mystery">🥚 {{ mystery }} more to discover — new pets appear as you meet new tricks.</p>{% endif %}
+{% endblock %}

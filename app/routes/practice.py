@@ -78,9 +78,20 @@ def render_home(request: Request, db: Session, user: User, contest: str = "", le
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
     return render(request, "practice_home.html", status_code=status_code,
                   wonder_hidden=request.session.get("wonder_hidden") == today, goal=child_goal(request, db, user),
+                  buddy=_buddy(db, user),
                   contests=contests, contest=contest, levels=choices,
                   level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user),
                   number_fact=_fav_number_fact(user), **extra)
+
+
+def _buddy(db: Session, user: User):
+    if user.role != Role.child:
+        return None
+    from app.pets.creatures import CREATURES
+    from app.pets.growth import buddy, growth
+    states = growth(db, user)
+    tag = buddy(db, user, states)
+    return {"c": CREATURES[tag], "stage": states[tag].stage} if tag else None
 
 
 def _fav_number_fact(user: User) -> str:

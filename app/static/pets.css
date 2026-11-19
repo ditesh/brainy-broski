@@ -81,3 +81,23 @@
 .preview-grid { display: grid; gap: 14px; }
 .preview-row h2 { margin: 0; } .preview-row p { margin: 2px 0 8px; }
 .preview-stages { gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+
+/* my pets page */
+.pet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-top: 12px; }
+.pet-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.pet-card.is-buddy { border-color: var(--accent); }
+.pet-card h2 { margin: 4px 0 0; font-size: var(--fs-lg); }
+.pet-card p { margin: 0; }
+.pet-technique { font-weight: var(--fw-bold); color: var(--muted); font-size: var(--fs-sm); }
+.pet-bar { width: 100%; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+.pet-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.pet-progress { font-size: var(--fs-sm); }
+.pet-card details { align-self: stretch; text-align: left; font-size: var(--fs-sm); }
+.pet-card form { margin-top: 6px; }
+.mystery { margin-top: 16px; font-weight: var(--fw-bold); color: var(--muted); }
+
+/* home: goal + buddy side by side */
+.home-top { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.home-top .goal-card { flex: 1 1 260px; margin: 12px 0 8px; }
+.buddy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+         margin: 12px 0 8px; font-size: var(--fs-sm); }

@@ -3,7 +3,14 @@
 <h1>Hi {% if user.avatar %}{{ user.avatar }} {% endif %}{{ user.display_name }}!{% if not user.avatar %} 👋{% endif %}</h1>
 <p class="hello">Pick a challenge and show those problems who's boss.</p>
 {% if number_fact %}<p class="muted fav-number">🔢 Your number: {{ number_fact }}</p>{% endif %}
-{% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
+{% if goal or buddy %}
+<div class="home-top">
+  {% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
+  {% if buddy %}{% from "pets/_pet.html" import pet %}
+  <div class="buddy">{{ pet(buddy.c, buddy.stage, size=120) }}<a href="/pets">{{ buddy.c.name }} · My pets →</a></div>
+  {% endif %}
+</div>
+{% endif %}
 {% if not wonder_hidden %}
 <section class="card wonder" id="wonder" aria-labelledby="wonder-title">
   <div class="row wonder-head">
