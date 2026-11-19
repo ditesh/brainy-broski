@@ -2,6 +2,7 @@
 {% from "pets/_pet.html" import pet %}
 {% block back %}{% if is_owner %}<a class="back" href="/practice">← All papers</a>{% else %}<a class="back" href="/progress?user={{ a.user_id }}">← Progress</a>{% endif %}{% endblock %}
 {% block content %}
+{% if is_owner %}<p class="sound-row">{% include "_sound_toggle.html" %}</p>{% endif %}
 <h1>{{ a.paper.title }}{% if a.redo_of_id %} <span class="chip">🔁 Redo of misses</span>{% endif %}</h1>
 <div class="card scorecard" {% if stars == 3 or cel.beat_best %}data-confetti{% endif %}>
   <div class="stars" aria-label="{{ stars }} of 3 stars">{% for i in range(3) %}<span class="star{% if i < stars %} on{% endif %}">★</span>{% endfor %}</div>

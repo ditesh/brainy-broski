@@ -1,0 +1,9 @@
+{# Mute/unmute for kids. Needs: user, request. #}
+{% if user and user.role.value == "child" %}
+{% set on = user.sound_on is not false %}
+<form method="post" action="/sound" class="inline sound-toggle">
+  <input type="hidden" name="on" value="{{ '0' if on else '1' }}">
+  <input type="hidden" name="next" value="{{ request.url.path }}{% if request.url.query %}?{{ request.url.query }}{% endif %}">
+  <button class="link" aria-pressed="{{ 'true' if on else 'false' }}">{{ "🔊 Sound on" if on else "🔇 Sound off" }}</button>
+</form>
+{% endif %}

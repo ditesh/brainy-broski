@@ -58,3 +58,14 @@ def choose_buddy(request: Request, tag: str = Form(""), user: User = Depends(cur
 def preview(request: Request, user: User = Depends(require_parent)):
     creatures = [CREATURES[t] for t, _, _ in TECHNIQUES]
     return render(request, "pets/preview.html", creatures=creatures, names=TECHNIQUE_NAMES)
+
+
+@router.post("/sound")
+def set_sound(on: str = Form("1"), next: str = Form("/practice"), user: User = Depends(current_user),
+              db: Session = Depends(get_db)):
+    if user.role != Role.child:
+        raise HTTPException(status_code=403)
+    user.sound_on = on == "1"
+    db.commit()
+    dest = next if next.startswith("/") and not next.startswith("//") else "/practice"
+    return RedirectResponse(dest, status_code=303)

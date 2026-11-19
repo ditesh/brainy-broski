@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap">
   <link rel="stylesheet" href="/static/app.css">
   <link rel="stylesheet" href="/static/pets.css">
+  <script defer src="/static/sound.js"></script>
   <script defer src="/static/pets.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -19,7 +20,7 @@
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
   {% block head %}{% endblock %}
 </head>
-<body>
+<body data-sound-pref="{{ 'on' if user and user.role.value == 'child' and user.sound_on is not false else 'off' }}">
   <header class="topbar">
     <a class="brand" href="/"><img src="/icon.svg?d={{ today_key }}" alt="" title="{{ today_symbol }}"> Brainy Broski</a>
     {% if user %}

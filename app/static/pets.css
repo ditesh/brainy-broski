@@ -111,3 +111,6 @@
 .celebrate-pet p { margin: 0; }
 .celebrate-gain { font-size: var(--fs-xl); font-weight: var(--fw-black); color: var(--accent); }
 .new-best { margin: 6px auto 0; }
+
+.sound-toggle button { font-size: var(--fs-sm); color: var(--muted); min-height: 32px; }
+.sound-row { margin: 0; text-align: right; }
