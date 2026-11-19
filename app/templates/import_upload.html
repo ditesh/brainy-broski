@@ -14,7 +14,8 @@
   <label>Contest
     <select name="contest">{% for c in contests %}<option>{{ c }}</option>{% endfor %}</select>
   </label>
-  <label>Year <input type="number" name="year" value="{{ this_year - 1 }}" min="1990" max="{{ this_year }}" required></label>
+  <label>Year <span class="muted">(optional — leave blank and we'll work it out from the file)</span>
+    <input type="number" name="year" min="1990" max="{{ this_year + 1 }}" inputmode="numeric" placeholder="e.g. {{ this_year - 1 }}"></label>
   <label>Time allowed (minutes, optional) <input type="number" name="duration_min" min="1" max="600" inputmode="numeric"></label>
   <button class="primary">Upload</button>
 </form>

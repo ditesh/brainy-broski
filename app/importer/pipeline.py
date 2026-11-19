@@ -43,6 +43,9 @@ def detect_structure(source_pdf_id: int, db: Session, ai: AIClient, settings: Se
         result = ai.structured(PdfStructure, STRUCTURE_SYSTEM, pages,
                                f"This PDF has {len(pages)} pages. Describe its structure.", "low")
         src.structure = result.model_dump(mode="json")
+        from app.importer.year import UNKNOWN_YEAR
+        if src.year == UNKNOWN_YEAR and result.year and 1990 <= result.year <= 2100:
+            src.year = result.year
         src.status = ImportStatus.needs_review
     except Exception as e:  # never leave the import stuck in "running"
         log.exception("structure detection failed")

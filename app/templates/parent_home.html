@@ -11,7 +11,7 @@
 {% for s in sources %}
 <div class="card">
   <div class="row" style="justify-content:space-between">
-    <strong>{{ s.contest }} {{ s.year }}</strong>
+    <strong>{{ s.label }}</strong>
     <span class="muted">{{ s.filename }}</span>
   </div>
   <p class="muted">Status: {{ s.status.value.replace("_", " ") }}</p>

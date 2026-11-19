@@ -13,6 +13,7 @@ from app.db import get_db
 from app.fetch import FetchError, fetch_pdf
 from app.importer.delete import delete_source, deletion_summary
 from app.importer.pipeline import detect_structure, run_import
+from app.importer.year import UNKNOWN_YEAR, guess_year
 from app.models import ImportStatus, Paper, SourcePdf, User
 from app.web import render
 
@@ -53,7 +54,7 @@ def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int
 @router.post("/parent/import")
 async def import_upload(request: Request, background: BackgroundTasks,
                         file: UploadFile | None = File(None), url: str = Form(""), contest: str = Form(...),
-                        year: int = Form(...), duration_min: str = Form(""), user: User = Depends(require_parent),
+                        year: str = Form(""), duration_min: str = Form(""), user: User = Depends(require_parent),
                         db: Session = Depends(get_db), ai: AIClient = Depends(get_ai)):
     def fail(msg: str):
         return render(request, "import_upload.html", status_code=400, contests=CONTESTS,
@@ -73,7 +74,7 @@ async def import_upload(request: Request, background: BackgroundTasks,
     if not data.startswith(b"%PDF"):
         return fail("That file isn't a PDF. Please choose the paper's PDF file.")
     settings = request.app.state.settings
-    src = SourcePdf(filename=filename or "paper.pdf", path="", contest=contest, year=year,
+    src = SourcePdf(filename=filename or "paper.pdf", path="", contest=contest, year=UNKNOWN_YEAR,
                     duration_min=int(duration_min) if duration_min.strip().isdigit() else None)
     db.add(src)
     db.flush()
@@ -82,6 +83,8 @@ async def import_upload(request: Request, background: BackgroundTasks,
     path = pdf_dir / f"{src.id}.pdf"
     path.write_bytes(data)
     src.path = str(path)
+    typed = year.strip()
+    src.year = int(typed) if typed.isdigit() else (guess_year(src.filename, url, path) or UNKNOWN_YEAR)
     db.commit()
     background.add_task(_job, request.app, detect_structure, src.id)
     return RedirectResponse(f"/parent/import/{src.id}", status_code=303)

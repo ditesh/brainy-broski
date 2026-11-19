@@ -11,6 +11,8 @@ section's category name exactly as printed, its language ("en" for English, "ms"
 - parts: within a section, the groups of questions with their point value (for example \
 "Part A (1 point each)" covers questions 1-5 worth 1 point). If the paper has no parts, give one \
 part covering all questions with the points printed, or 1 if none are printed.
+- year: the year of the contest as printed on the paper (for example 2021), or null if no year is \
+printed.
 - answer_keys: the pages listing official answers, one entry per category, with each question \
 number and its answer exactly as printed (a number, a fraction like 3/4, or a letter A-E).
 

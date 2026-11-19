@@ -68,6 +68,10 @@ class SourcePdf(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     papers: Mapped[list["Paper"]] = relationship(back_populates="source_pdf")
 
+    @property
+    def label(self) -> str:
+        return f"{self.contest} {self.year}" if self.year else f"{self.contest} (year unknown)"
+
 
 class Paper(Base):
     __tablename__ = "paper"
@@ -83,7 +87,8 @@ class Paper(Base):
 
     @property
     def title(self) -> str:
-        return f"{self.source_pdf.contest} {self.source_pdf.year} {self.category}"
+        s = self.source_pdf
+        return f"{s.contest} {s.year} {self.category}" if s.year else f"{s.contest} {self.category}"
 
 
 class Problem(Base):

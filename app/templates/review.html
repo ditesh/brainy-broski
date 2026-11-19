@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block back %}<a class="back" href="/parent/import/{{ paper.source_pdf_id }}">← {{ paper.source_pdf.contest }} {{ paper.source_pdf.year }}</a>{% endblock %}
+{% block back %}<a class="back" href="/parent/import/{{ paper.source_pdf_id }}">← {{ paper.source_pdf.label }}</a>{% endblock %}
 {% block content %}
 <h1>Review: {{ paper.title }}</h1>
 <p class="muted">Check each question picture, its answer and points. Questions marked "also in" are the same question in another paper and share their answer.</p>
