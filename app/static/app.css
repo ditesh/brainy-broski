@@ -148,4 +148,19 @@ details.original summary { font-size: var(--fs-sm); color: var(--muted); min-hei
 .qtext.preview { border: 2px dashed var(--line); border-radius: 12px; padding: 8px 12px; }
 textarea { font-family: var(--font-mono); font-size: var(--fs-sm); }
 .big-button { font-size: var(--fs-lg); min-height: 64px; }
-.check-row { flex-direction: row; font-weight: var(--fw-regular); }
+.choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.choice { display: flex; flex-direction: row; align-items: center; gap: 12px; min-height: 56px; padding: 10px 16px;
+          border: 2px solid var(--line); border-radius: 16px; background: var(--card); cursor: pointer;
+          font-weight: var(--fw-bold); transition: border-color .15s, background .15s; }
+.choice:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.choice:has(:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+input[type="checkbox"] { -webkit-appearance: none; appearance: none; flex: none; width: 26px; height: 26px;
+                         min-height: 0; padding: 0; margin: 0; border: 2px solid var(--line); border-radius: 8px;
+                         background: var(--card); display: grid; place-content: center; cursor: pointer;
+                         transition: background .15s, border-color .15s; }
+input[type="checkbox"]::after { content: ""; width: 7px; height: 13px; margin-top: -3px; border: solid var(--accent-fg);
+                                border-width: 0 3px 3px 0; transform: rotate(45deg) scale(0); transition: transform .12s; }
+input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+input[type="checkbox"]:checked::after { transform: rotate(45deg) scale(1); }
+input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .choice, input[type="checkbox"], input[type="checkbox"]::after { transition: none; } }

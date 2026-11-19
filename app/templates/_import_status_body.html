@@ -9,9 +9,11 @@
   {% if categories %}
   <form method="post" action="/parent/import/{{ src.id }}" class="stack">
     <p>Found these English papers. Tick the ones to import:</p>
+    <div class="choices">
     {% for c in categories %}
-      <label class="row check-row"><input type="checkbox" name="categories" value="{{ c }}" style="width:auto;min-height:0" {% if c == "Junior" %}checked{% endif %}> {{ c }}</label>
+      <label class="choice"><input type="checkbox" name="categories" value="{{ c }}" {% if c == "Junior" %}checked{% endif %}><span>{{ c }}</span></label>
     {% endfor %}
+    </div>
     <button class="primary">Import</button>
   </form>
   {% else %}
@@ -33,9 +35,11 @@
 {% if src.status.value == "done" and more %}
   <h2>Import more levels</h2>
   <form method="post" action="/parent/import/{{ src.id }}" class="stack">
+    <div class="choices">
     {% for c in more %}
-      <label class="row check-row"><input type="checkbox" name="categories" value="{{ c }}" style="width:auto;min-height:0"> {{ c }}</label>
+      <label class="choice"><input type="checkbox" name="categories" value="{{ c }}"><span>{{ c }}</span></label>
     {% endfor %}
+    </div>
     <button>Import these</button>
   </form>
 {% endif %}

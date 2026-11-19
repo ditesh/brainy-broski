@@ -67,3 +67,17 @@ def test_app_is_called_brainy_broski(client):
     assert "<title>Brainy Broski</title>" in html
     assert "Brainy Broski</a>" in html
     assert "Olympiad Practice" not in html
+
+
+def test_checkboxes_are_themed_cards(parent_client, db, contest_src):
+    import re
+    from pathlib import Path
+    html = parent_client.get(f"/parent/import/{contest_src.id}").text
+    boxes = re.findall(r"<input[^>]*type=\"checkbox\"[^>]*>", html)
+    assert boxes and not any("style=" in b for b in boxes)
+    assert html.count('class="choice"') == len(boxes)
+    css = Path("app/static/app.css").read_text()
+    assert re.search(r'input\[type="checkbox"\][^{]*\{[^}]*appearance: none', css)
+    assert 'input[type="checkbox"]:checked' in css
+    assert ".choice:has(:checked)" in css
+    assert 'input[type="checkbox"]:focus-visible' in css
