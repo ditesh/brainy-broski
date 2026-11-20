@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block back %}<a class="back" href="/progress?user={{ a.user_id }}">← Progress</a>{% endblock %}
+{% block content %}
+<h1>Delete this paper?</h1>
+<div class="card">
+  <p>This permanently deletes {{ a.user.display_name }}'s try at <strong>{{ a.paper.title }}</strong>
+    on {{ a.submitted_at.strftime("%d %b %Y") if a.submitted_at else a.started_at.strftime("%d %b %Y") }}{% if a.submitted_at %}
+    ({{ a.score }} / {{ a.max_score }}){% endif %}, with:</p>
+  <ul>
+    <li>{{ s.answers }} answer{{ "s" if s.answers != 1 }}, the feedback on them and any follow-up questions</li>
+    {% if s.photos %}<li>{{ s.photos }} photo{{ "s" if s.photos != 1 }} of working</li>{% endif %}
+    {% if s.redos %}<li><strong>{{ s.redos }} redo{{ "s" if s.redos != 1 }} of misses</strong> made from this paper</li>{% endif %}
+  </ul>
+  <p class="muted">His pets and this week's goal count are worked out from his answers, so they'll shrink to match. Bonus eggs he's already been given stay.</p>
+  <div class="row">
+    <form method="post" action="/parent/attempts/{{ a.id }}/delete"><button class="danger">Delete for good</button></form>
+    <a class="button" href="/progress?user={{ a.user_id }}">Keep it</a>
+  </div>
+</div>
+{% endblock %}

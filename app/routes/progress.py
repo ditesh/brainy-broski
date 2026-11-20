@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.auth import require_parent, require_user
 from app.db import get_db
-from app.models import Label, Response, Role, User
+from app.importer.delete import attempt_deletion_summary, delete_attempt
+from app.models import Attempt, Label, Response, Role, User
 from app.progress import (effective_label, miss_breakdown_by_week, paper_history, recent_misses,
                           technique_table)
 from app.routes.feedback import LABEL_TEXT
@@ -59,3 +60,26 @@ def override(response_id: int, request: Request, label: str = Form(""), user: Us
     db.commit()
     back = request.headers.get("referer") or f"/progress?user={r.attempt.user_id}"
     return RedirectResponse(back, status_code=303)
+
+
+def _attempt_for_parent(db: Session, attempt_id: int) -> Attempt:
+    a = db.get(Attempt, attempt_id)
+    if a is None:
+        raise HTTPException(404)
+    return a
+
+
+@router.get("/parent/attempts/{attempt_id}/delete")
+def delete_attempt_confirm(attempt_id: int, request: Request, user: User = Depends(require_parent),
+                           db: Session = Depends(get_db)):
+    a = _attempt_for_parent(db, attempt_id)
+    return render(request, "delete_attempt.html", a=a, s=attempt_deletion_summary(db, a))
+
+
+@router.post("/parent/attempts/{attempt_id}/delete")
+def delete_attempt_now(attempt_id: int, request: Request, user: User = Depends(require_parent),
+                       db: Session = Depends(get_db)):
+    a = _attempt_for_parent(db, attempt_id)
+    child_id = a.user_id
+    delete_attempt(db, request.app.state.settings, a)
+    return RedirectResponse(f"/progress?user={child_id}", status_code=303)
