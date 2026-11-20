@@ -77,9 +77,19 @@ def render_home(request: Request, db: Session, user: User, contest: str = "", le
     from app import daily
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
     new_bonus = _settle_and_announce(request, db, user)
+    goal, buddy_pet = child_goal(request, db, user), _buddy(db, user)
+    mission = lines = None
+    if user.role == Role.child:
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        from app.mission import buddy_lines, mission_for
+        mission = mission_for(db, user, shown)
+        now = datetime.now(ZoneInfo(request.app.state.settings.timezone))
+        lines = buddy_lines(user, buddy_pet, goal, mission, now)
     return render(request, "practice_home.html", status_code=status_code, new_bonus=new_bonus,
-                  wonder_hidden=request.session.get("wonder_hidden") == today, goal=child_goal(request, db, user),
-                  buddy=_buddy(db, user),
+                  mission=mission, buddy_lines=lines,
+                  wonder_hidden=request.session.get("wonder_hidden") == today, goal=goal,
+                  buddy=buddy_pet,
                   contests=contests, contest=contest, levels=choices,
                   level=level, shown=shown, in_progress=in_progress, done=done, status=paper_status(db, user),
                   number_fact=_fav_number_fact(user), **extra)
@@ -127,6 +137,22 @@ def wonder_dismiss(request: Request, user: User = Depends(require_user)):
     if request.headers.get("HX-Request"):
         return HTMLResponse("")
     return RedirectResponse("/practice", status_code=303)
+
+
+@router.post("/mission/start")
+def mission_start(paper_id: int = Form(...), numbers: str = Form(""), user: User = Depends(require_user),
+                  db: Session = Depends(get_db)):
+    if user.role != Role.child:
+        raise HTTPException(403)
+    paper = db.get(Paper, paper_id)
+    if paper is None or not paper.published:
+        raise HTTPException(404)
+    try:
+        chosen = [int(n) for n in numbers.split(",") if n.strip()]
+        a = start_attempt(db, user, paper, "practice", chosen or [-1])
+    except ValueError:
+        raise HTTPException(400, "That mission isn't available any more. Pick a paper below.")
+    return RedirectResponse(f"/attempts/{a.id}?q={a.question_numbers[0]}", status_code=303)
 
 
 @router.post("/practice/start")

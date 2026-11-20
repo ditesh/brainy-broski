@@ -96,11 +96,24 @@
 .pet-card form { margin-top: 6px; }
 .mystery { margin-top: 16px; font-weight: var(--fw-bold); color: var(--muted); }
 
-/* home: goal + buddy side by side */
-.home-top { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
-.home-top .goal-card { flex: 1 1 260px; margin: 12px 0 8px; }
-.buddy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-         margin: 12px 0 8px; font-size: var(--fs-sm); }
+/* home: buddy hands over today's mission */
+.mission-hero { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 12px 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--card)), var(--card) 60%); }
+.buddy-hero { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 0 0 auto; max-width: 220px; }
+.buddy-avatar { font-size: var(--fs-3xl); line-height: 1; }
+.speech { position: relative; margin: 0; padding: 8px 14px; border-radius: 16px; background: var(--card);
+  border: 2px solid var(--accent); font-weight: var(--fw-heavy); text-align: center; }
+.speech::before { content: ""; position: absolute; top: -9px; left: 50%; margin-left: -8px; border: 8px solid transparent;
+  border-top: 0; border-bottom-color: var(--accent); }
+.speech.pop { animation: speech-pop .25s ease-out; }
+@keyframes speech-pop { 0% { transform: scale(.85); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
+.buddy-link { font-size: var(--fs-sm); }
+.mission { flex: 1 1 260px; }
+.mission h2 { margin: 2px 0 4px; }
+.mission p { margin: 0 0 10px; }
+.mission-label { font-size: var(--fs-sm); font-weight: var(--fw-heavy); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.mission-go { font-size: var(--fs-lg); padding: 12px 22px; }
+@media (prefers-reduced-motion: reduce) { .speech.pop { animation: none; } }
 
 /* results: what you earned */
 .celebrate { margin: 16px 0; }

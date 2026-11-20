@@ -13,14 +13,37 @@
   </div>
 </section>
 {% endif %}
-{% if goal or buddy %}
-<div class="home-top">
-  {% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
-  {% if buddy %}{% from "pets/_pet.html" import pet %}
-  <div class="buddy">{{ pet(buddy.c, buddy.stage, size=120) }}<a href="/pets">{{ buddy.c.name }} · My pets →</a></div>
+{% if buddy_lines %}{% from "pets/_pet.html" import pet %}
+<section class="card mission-hero">
+  <div class="buddy-hero">
+    {% if buddy %}{{ pet(buddy.c, buddy.stage, size=120, lines=buddy_lines) }}
+    {% else %}<span class="buddy-avatar" aria-hidden="true">{{ user.avatar or "🙂" }}</span>{% endif %}
+    <p class="speech" aria-live="polite">{{ buddy_lines[0] }}</p>
+    {% if buddy %}<a class="buddy-link" href="/pets">{{ buddy.c.name }} · My pets →</a>{% endif %}
+  </div>
+  {% if mission %}
+  <div class="mission">
+    <p class="mission-label">🎯 Today's mission</p>
+    <h2>{{ mission.title }}</h2>
+    <p>{{ mission.detail }}</p>
+    {% if mission.kind == "continue" %}
+      <a class="button primary mission-go" href="/attempts/{{ mission.attempt_id }}">Continue →</a>
+    {% elif mission.kind == "redo" %}
+      <form method="post" action="/attempts/{{ mission.attempt_id }}/redo"><button class="primary mission-go">Fix them →</button></form>
+    {% else %}
+      <form method="post" action="/mission/start">
+        <input type="hidden" name="paper_id" value="{{ mission.paper_id }}">
+        <input type="hidden" name="numbers" value="{{ mission.numbers | join(',') }}">
+        <button class="primary mission-go">Start mission 🚀</button>
+      </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="mission"><p class="mission-label">🎯 Today's mission</p><p>You've tried every question! Ask your parent to add another paper.</p></div>
   {% endif %}
-</div>
+</section>
 {% endif %}
+{% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
 {% if not wonder_hidden %}
 <section class="card wonder" id="wonder" aria-labelledby="wonder-title">
   <div class="row wonder-head">

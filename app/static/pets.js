@@ -27,7 +27,26 @@
     play(el, "happy");
   }
 
+  // A buddy with lines says the next one in its speech bubble instead of the little pop-up.
+  function talk(el) {
+    var lines;
+    try { lines = JSON.parse(el.dataset.lines || "[]"); } catch (e) { lines = []; }
+    var speech = el.parentNode && el.parentNode.querySelector(".speech");
+    if (!lines.length || !speech) return false;
+    el._line = ((el._line || 0) + 1) % lines.length;
+    speech.textContent = lines[el._line];
+    speech.classList.remove("pop"); void speech.offsetWidth; speech.classList.add("pop");
+    return true;
+  }
+
   function tickle(el) {
+    if (talk(el)) {
+      el.classList.remove("tickled"); void el.offsetWidth; el.classList.add("tickled");
+      clearTimeout(el._tickleT);
+      el._tickleT = setTimeout(function () { el.classList.remove("tickled"); }, 800);
+      sound("squeak");
+      return;
+    }
     var b = el.querySelector(".bubble");
     if (b) b.textContent = el.dataset.say || "hehe!";
     el.classList.remove("tickled"); void el.offsetWidth; el.classList.add("tickled");
