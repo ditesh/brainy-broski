@@ -34,6 +34,14 @@
 
 {% if goal %}{% with goal_next = "/account" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
 
+{% if is_child %}
+<section class="card stack-section" aria-labelledby="sound-title">
+  <h2 id="sound-title">Sounds</h2>
+  <p class="muted">Dings, egg cracks and fanfares when your pets grow. Turn them off when you need to be quiet.</p>
+  {% include "_sound_toggle.html" %}
+</section>
+{% endif %}
+
 <section class="card stack-section" aria-labelledby="pw-title">
   <h2 id="pw-title">Change password</h2>
   {% if pw_error %}{{ alert("error", pw_error) }}{% endif %}

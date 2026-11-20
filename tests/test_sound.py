@@ -11,7 +11,7 @@ def test_sound_on_by_default(child_client):
 
 
 def test_toggle_sound(app, child_client):
-    r = child_client.post("/sound", data={"on": "0", "next": "/practice"})
+    r = child_client.post("/sound", data={"on": "0", "next": "/account"})
     assert 'data-sound-pref="off"' in r.text
     other = TestClient(app)
     login_as(other, "kid")
@@ -20,13 +20,19 @@ def test_toggle_sound(app, child_client):
     assert 'data-sound-pref="on"' in child_client.get("/practice").text
 
 
-def test_toggle_on_home_and_results(child_client, db, child, junior_paper):
+def test_toggle_only_on_me_page(child_client, db, child, junior_paper):
     from app.practice.service import save_answer, start_attempt, submit
-    assert 'action="/sound"' in child_client.get("/practice").text
+    assert 'action="/sound"' in child_client.get("/account").text
+    assert 'action="/sound"' not in child_client.get("/practice").text
     a = start_attempt(db, child, junior_paper, "practice", [1])
     save_answer(db, a, 1, "1")
     submit(db, a)
-    assert 'action="/sound"' in child_client.get(f"/attempts/{a.id}/results").text
+    assert 'action="/sound"' not in child_client.get(f"/attempts/{a.id}/results").text
+
+
+def test_toggle_returns_to_me_page(child_client):
+    r = child_client.post("/sound", data={"on": "0", "next": "/account"})
+    assert "All about me" in r.text and "Sound off" in r.text
 
 
 def test_parents_get_no_sound(parent_client):

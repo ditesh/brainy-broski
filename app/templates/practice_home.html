@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Hi {% if user.avatar %}{{ user.avatar }} {% endif %}{{ user.display_name }}!{% if not user.avatar %} 👋{% endif %}</h1>
-<p class="hello">Pick a challenge and show those problems who's boss. {% include "_sound_toggle.html" %}</p>
+<p class="hello">Pick a challenge and show those problems who's boss.</p>
 {% if number_fact %}<p class="muted fav-number">🔢 Your number: {{ number_fact }}</p>{% endif %}
 {% if new_bonus %}{% from "pets/_pet.html" import pet %}
 <section class="card celebrate-goal bonus-banner">
