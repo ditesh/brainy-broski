@@ -11,7 +11,7 @@ _MD = MarkdownIt("commonmark", {"html": False})
 _MATH = re.compile(r"(\$\$.+?\$\$|\$[^$\n]+?\$)", re.S)
 
 
-def md(text: str | None) -> Markup:
+def md(text: str | None, inline: bool = False) -> Markup:
     """Render untrusted Markdown (raw HTML disabled), keeping $...$ maths intact for KaTeX."""
     if not text:
         return Markup("")
@@ -21,9 +21,50 @@ def md(text: str | None) -> Markup:
         spans.append(str(escape(m.group(0))))
         return f"@@MATH{len(spans) - 1}@@"
 
-    html = _MD.render(_MATH.sub(keep, text))
+    kept = _MATH.sub(keep, text)
+    html = _MD.renderInline(kept) if inline else _MD.render(kept)
     html = re.sub(r"@@MATH(\d+)@@", lambda m: spans[int(m.group(1))], html)
     return Markup(html)
+
+
+_OPTION = re.compile(r"^\s*\(([A-E])\)\s")
+_NEXT_OPTION = re.compile(r"\s+(?=\([B-E]\)\s)")
+
+
+def _with_option_lists(text: str) -> str:
+    """Multiple-choice options ("(A) ...", "(B) ...") become one list, one option per line. Markdown would
+    otherwise run single lines together, and some papers print all the options on one line."""
+    lines: list[str] = []
+    for line in text.split("\n"):
+        if _OPTION.match(line) and line.lstrip().startswith("(A)"):
+            lines += _NEXT_OPTION.split(line.strip())
+        else:
+            lines.append(line)
+    out, run = [], []
+
+    def flush():
+        if len(run) >= 2:
+            items = "".join(f"<li>{md(o.strip(), inline=True)}</li>" for o in run)
+            out.append(f'\n\n@@OPTS{len(_blocks)}@@\n\n')
+            _blocks.append(f'<ul class="mcq-options">{items}</ul>')
+        elif run:
+            out.extend(run + [""])
+        run.clear()
+
+    _blocks: list[str] = []
+    for line in lines:
+        if _OPTION.match(line):
+            run.append(line)
+        elif not line.strip() and run:
+            continue  # blank lines between options
+        else:
+            flush()
+            out.append(line)
+    flush()
+    html = str(md("\n".join(out)))
+    for i, block in enumerate(_blocks):
+        html = html.replace(f"<p>@@OPTS{i}@@</p>", block)
+    return html
 
 
 TEMPLATES.env.filters["md"] = md
@@ -36,7 +77,7 @@ def question_html(text: str | None, figure_paths: list | None) -> Markup:
     pieces = FIGURE_MARK.split(text or "")
     html = []
     for i, piece in enumerate(pieces):
-        html.append(str(md(piece)))
+        html.append(_with_option_lists(piece))
         if i < len(pieces) - 1 and figs:
             html.append(figs.pop(0))
     html.extend(figs)
