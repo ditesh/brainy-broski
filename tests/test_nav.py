@@ -25,3 +25,8 @@ def test_current_tab_marked_on_sub_pages(parent_client):
 
 def test_account_tab_marked(child_client):
     assert '<a href="/account" aria-current="page"' in child_client.get("/account").text
+
+
+def test_back_links_never_underlined():
+    rule = re.search(r"a\.back:hover[^{]*\{([^}]*)\}", CSS)
+    assert rule and "text-decoration: none" in rule.group(1)
