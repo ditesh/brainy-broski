@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-CSS = next(Path("app/static").glob("*.css")).read_text()
+CSS = Path("app/static/app.css").read_text()
 
 
 def test_tabs_never_underlined():
