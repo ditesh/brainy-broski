@@ -83,7 +83,7 @@ def _reset_interrupted_jobs(session_factory: sessionmaker) -> None:
     db = session_factory()
     try:
         for src in db.query(SourcePdf).filter(SourcePdf.status == ImportStatus.running).all():
-            src.status, src.error = ImportStatus.failed, "The import was interrupted. Press Retry."
+            src.status, src.error = ImportStatus.failed, "The import was interrupted. Press Retry to carry on where it stopped."
         for r in db.query(Response).filter(Response.diagnosis_status == DiagnosisStatus.pending).all():
             r.diagnosis_status, r.label = DiagnosisStatus.failed, Label.unsure
         db.commit()

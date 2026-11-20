@@ -127,7 +127,7 @@ def test_reimport_keeps_history_and_finishes(db, settings, fake_ai, papers, chil
     db.expire_all()
     assert db.get(SourcePdf, contest_src.id).status == ImportStatus.done
     assert db.get(Response, a.responses[0].id).paper_question.problem.answer == "18"
-    assert db.query(Paper).filter_by(category="Junior").count() == 2
+    assert db.query(Paper).filter_by(category="Junior").count() == 1   # carried on with, not copied
 
 
 # ---- #6: running headers are not continuations; parent can drop an image ----

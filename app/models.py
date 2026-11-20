@@ -73,6 +73,7 @@ class SourcePdf(Base):
     status: Mapped[ImportStatus] = mapped_column(Enum(ImportStatus), default=ImportStatus.pending)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     structure: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    queued: Mapped[list | None] = mapped_column(JSON, nullable=True)  # sections an unfinished import still owes
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     papers: Mapped[list["Paper"]] = relationship(back_populates="source_pdf")
 
@@ -93,6 +94,7 @@ class Paper(Base):
     duration_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     published: Mapped[bool] = mapped_column(Boolean, default=False)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)  # only when the PDF holds several years
+    complete: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # every question imported
     source_pdf: Mapped[SourcePdf] = relationship(back_populates="papers")
     questions: Mapped[list["PaperQuestion"]] = relationship(
         back_populates="paper", order_by="PaperQuestion.number")

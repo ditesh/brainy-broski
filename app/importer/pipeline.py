@@ -137,9 +137,11 @@ def _has_history(db: Session, paper: Paper) -> bool:
 
 
 def _clear_unpublished(db: Session, src: SourcePdf, categories: list[str]) -> None:
-    """Remove earlier unpublished imports of these sections, unless the child has used them."""
+    """Remove earlier unpublished imports of these sections from before imports could resume (their
+    completeness is unknown), unless the child has used them. Newer papers are resumed instead."""
     for paper in db.query(Paper).filter(Paper.source_pdf_id == src.id).all():
-        if paper.choice_key in categories and not paper.published and not _has_history(db, paper):
+        if (paper.choice_key in categories and paper.complete is None and not paper.published
+                and not _has_history(db, paper)):
             problem_ids = {q.problem_id for q in paper.questions}
             for q in list(paper.questions):
                 db.delete(q)
@@ -152,25 +154,38 @@ def _clear_unpublished(db: Session, src: SourcePdf, categories: list[str]) -> No
     db.flush()
 
 
+def done_keys(db: Session, src: SourcePdf) -> set[str]:
+    """Sections already fully in (or published): never imported again."""
+    return {p.choice_key for p in db.query(Paper).filter(Paper.source_pdf_id == src.id).all()
+            if p.complete or p.published}
+
+
 def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AIClient, settings: Settings) -> None:
     src = db.get(SourcePdf, source_pdf_id)
     structure = PdfStructure.model_validate(src.structure)
     pdf = Path(src.path)
-    src.status, src.error = ImportStatus.running, None
+    src.status, src.error, src.queued = ImportStatus.running, None, list(categories)
     db.commit()
     try:
         _clear_unpublished(db, src, categories)
         db.commit()
         text_layer = has_text_layer(pdf)
         multi = _multi_year(structure)
+        skip = done_keys(db, src)
         for section in _english(structure):
-            if section_key(section, multi) not in categories:
+            key = section_key(section, multi)
+            if key not in categories or key in skip:
                 continue
-            paper = Paper(source_pdf_id=src.id, category=section.category, language="en",
-                          year=section.year if multi else None,
-                          duration_min=src.duration_min, published=False)
-            db.add(paper)
-            db.commit()  # don't hold the SQLite write lock during the slow AI calls below
+            # an earlier run that stopped partway left this paper half-filled: carry on with it
+            paper = next((p for p in db.query(Paper).filter(Paper.source_pdf_id == src.id).all()
+                          if p.choice_key == key), None)
+            if paper is None:
+                paper = Paper(source_pdf_id=src.id, category=section.category, language="en",
+                              year=section.year if multi else None,
+                              duration_min=src.duration_min, published=False, complete=False)
+                db.add(paper)
+                db.commit()  # don't hold the SQLite write lock during the slow AI calls below
+            have = {n for (n,) in db.query(PaperQuestion.number).filter(PaperQuestion.paper_id == paper.id)}
             out_dir = crop_dir(settings, paper)
             if text_layer:
                 anchors = find_anchors(pdf, list(range(section.first_page, section.last_page + 1)))
@@ -186,6 +201,8 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
                                     n, answers[n], a)
                 answers.update(exact)
             for n in sorted(crops):
+                if n in have:
+                    continue
                 boxes = crops[n]
                 analysis = ai.structured(QuestionAnalysis, ANALYSE_SYSTEM, [b.path for b in boxes],
                                          f"Allowed technique tags:\n{_tag_list()}", "low")
@@ -203,8 +220,10 @@ def run_import(source_pdf_id: int, categories: list[str], db: Session, ai: AICli
                     crop_paths=[str(b.path.relative_to(settings.data_dir)) for b in boxes],
                     crop_boxes=[b.as_list() for b in boxes], figure_paths=figs))
                 db.commit()
+            paper.complete = True
+            db.commit()
         link_duplicates(db, src.id)
-        src.status = ImportStatus.done
+        src.status, src.queued = ImportStatus.done, None
     except Exception as e:  # never leave the import stuck in "running"
         log.exception("import failed")
         db.rollback()

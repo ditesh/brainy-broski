@@ -12,7 +12,7 @@ from app.auth import require_parent
 from app.db import get_db
 from app.fetch import FetchError, fetch_pdf
 from app.importer.delete import delete_source, deletion_summary
-from app.importer.pipeline import choice_keys, detect_structure, run_import
+from app.importer.pipeline import choice_keys, detect_structure, done_keys, run_import
 from app.importer.contest import CONTESTS, UNKNOWN_CONTEST, guess_contest
 from app.importer.year import UNKNOWN_YEAR, guess_year
 from app.models import ImportStatus, Paper, SourcePdf, User
@@ -41,7 +41,7 @@ def _status_page(request: Request, db: Session, src: SourcePdf, status_code: int
     papers = db.query(Paper).filter_by(source_pdf_id=src.id).all()
     return render(request, "import_status.html", status_code=status_code, src=src,
                   categories=_english_categories(src), papers=papers, contests=CONTESTS,
-                  this_year=date.today().year, error=error)
+                  this_year=date.today().year, error=error, done=done_keys(db, src))
 
 
 @router.post("/parent/import")
@@ -110,7 +110,7 @@ def import_status(src_id: int, request: Request, user: User = Depends(require_pa
     src = _get_src(db, src_id)
     if request.headers.get("HX-Request"):
         return render(request, "_import_status_body.html", src=src, categories=_english_categories(src),
-                      papers=db.query(Paper).filter_by(source_pdf_id=src.id).all())
+                      papers=db.query(Paper).filter_by(source_pdf_id=src.id).all(), done=done_keys(db, src))
     return _status_page(request, db, src)
 
 
@@ -133,7 +133,11 @@ def import_retry(src_id: int, request: Request, background: BackgroundTasks,
                  user: User = Depends(require_parent), db: Session = Depends(get_db),
                  ai: AIClient = Depends(get_ai)):
     src = _get_src(db, src_id)
-    if src.structure:
+    if src.structure and src.queued:  # an import stopped partway: carry on with the same sections
+        src.status, src.error = ImportStatus.running, None
+        db.commit()
+        background.add_task(_job, request.app, run_import, src.id, list(src.queued))
+    elif src.structure:
         src.status, src.error = ImportStatus.needs_review, None
         db.commit()
     else:

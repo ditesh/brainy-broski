@@ -6,16 +6,19 @@
   {{ alert("error", "We couldn't read this paper" if not src.structure else "The import stopped partway", src.error,
            [{"label": "Retry", "post": "/parent/import/" ~ src.id ~ "/retry"}, {"label": "Back to papers", "href": "/parent"}]) }}
 {% elif src.status.value == "needs_review" %}
-  {% if categories %}
+  {% set open = categories | reject("in", done or []) | list %}
+  {% if open %}
   <form method="post" action="/parent/import/{{ src.id }}" class="stack">
     <p>Found these English papers. Tick the ones to import:</p>
     <div class="choices">
-    {% for c in categories %}
+    {% for c in open %}
       <label class="choice"><input type="checkbox" name="categories" value="{{ c }}" {% if c == "Junior" %}checked{% endif %}><span>{{ c }}</span></label>
     {% endfor %}
     </div>
     <button class="primary">Import</button>
   </form>
+  {% elif categories %}
+  {{ alert("success", "Everything is in", "Every paper in this PDF has been imported.") }}
   {% else %}
   {{ alert("error", "No English papers found", "This PDF doesn't seem to have an English version. Check it's the right file.",
            [{"label": "Add a different paper", "href": "/parent/import"}]) }}
