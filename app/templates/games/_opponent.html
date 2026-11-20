@@ -1,0 +1,6 @@
+{# The buddy (or a robot) on the other side of the table. Needs: buddy (dict or None). #}
+{% from "pets/_pet.html" import pet %}
+<div class="opponent">
+  {% if buddy %}{{ pet(buddy.c, buddy.stage, size=110) }}{% else %}<span class="robot" aria-hidden="true">🤖</span>{% endif %}
+  <p class="speech" aria-live="polite" data-opponent="{{ buddy.c.name if buddy else 'Robo' }}">{{ hello }}</p>
+</div>

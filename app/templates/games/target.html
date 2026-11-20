@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block back %}<a class="back" href="/games">← Games</a>{% endblock %}
+{% block content %}
+<h1>{{ info.emoji }} {{ info.name }}</h1>
+<p class="hello">Tap a number, then + − × ÷, then another number to join them. Use all four to make <strong>{{ puzzle.target }}</strong>.</p>
+<div class="card game" data-game="target" data-numbers='{{ puzzle.numbers | tojson }}' data-target="{{ puzzle.target }}"
+     data-answer="{{ puzzle.answer }}" data-round="{{ round_id or '' }}">
+  {% with hello = "Make " ~ puzzle.target ~ "! I believe in you." %}{% include "games/_opponent.html" %}{% endwith %}
+  <div class="tiles row" aria-label="Numbers"></div>
+  <div class="ops row" aria-label="Operations">
+    <button data-op="+">+</button><button data-op="−">−</button><button data-op="×">×</button><button data-op="÷">÷</button>
+  </div>
+  <p class="target-steps muted" aria-live="polite"></p>
+  <div class="row target-tools">
+    <button class="link" data-undo>Undo</button>
+    <button class="link" data-reset>Start again</button>
+    <button class="link" data-giveup>Show me</button>
+  </div>
+  <div class="game-over" hidden>
+    <p class="game-over-text"></p>
+    <a class="button primary" href="/games">Back to games</a>
+  </div>
+</div>
+{% endblock %}

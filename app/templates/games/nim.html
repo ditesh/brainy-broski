@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block back %}<a class="back" href="/games">← Games</a>{% endblock %}
+{% block content %}
+<h1>{{ info.emoji }} {{ info.name }}</h1>
+<p class="hello">Take 1, 2 or 3 stones. Whoever takes the <strong>last</strong> stone wins. You go first!</p>
+<div class="card game" data-game="nim" data-pile="{{ puzzle.pile }}" data-round="{{ round_id or '' }}">
+  {% with hello = "Let's duel! Your move." %}{% include "games/_opponent.html" %}{% endwith %}
+  <p class="nim-count" aria-live="polite"><span class="nim-left">{{ puzzle.pile }}</span> stones left</p>
+  <div class="nim-pile" aria-hidden="true"></div>
+  <div class="nim-moves row">
+    <button class="primary" data-take="1">Take 1</button>
+    <button class="primary" data-take="2">Take 2</button>
+    <button class="primary" data-take="3">Take 3</button>
+  </div>
+  <div class="game-over" hidden>
+    <p class="game-over-text"></p>
+    <a class="button primary" href="/games">Back to games</a>
+  </div>
+</div>
+{% endblock %}

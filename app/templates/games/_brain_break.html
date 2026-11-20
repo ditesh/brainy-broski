@@ -1,0 +1,15 @@
+{# Home-page card: how close he is to a brain break, or how many rounds he has. Needs: brain (Rounds). #}
+<section class="card brain-break{% if brain.left %} ready{% endif %}" aria-labelledby="brain-title">
+  <div class="brain-icon" aria-hidden="true">🎮</div>
+  <div>
+    <h2 id="brain-title">Brain break</h2>
+    {% if brain.left %}
+    <p>You've earned it! You have {{ brain.left }} game{{ "s" if brain.left != 1 }} to play.</p>
+    <a class="button primary" href="/games">Play →</a>
+    {% else %}
+    <p>Answer {{ brain.to_next }} more question{{ "s" if brain.to_next != 1 }} to unlock a brain break
+      ({{ 2 }} games).</p>
+    <a class="muted" href="/games">See the games</a>
+    {% endif %}
+  </div>
+</section>

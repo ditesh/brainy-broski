@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block back %}<a class="back" href="/practice">← Practice</a>{% endblock %}
+{% block content %}
+<h1>Brain break 🎮</h1>
+{% if rounds %}
+  {% if rounds.left %}
+  <p class="hello">You have <strong>{{ rounds.left }}</strong> game{{ "s" if rounds.left != 1 }} to play today.</p>
+  {% else %}
+  <p class="hello">Answer {{ rounds.to_next }} more question{{ "s" if rounds.to_next != 1 }} to earn 2 games.
+    <a href="/practice">Back to practice →</a></p>
+  {% endif %}
+{% else %}
+  <p class="hello">Your child earns 2 games for every 3 questions answered. You can try them here any time.</p>
+{% endif %}
+<div class="game-grid">
+{% for key, g in games.items() %}
+  <article class="card game-card">
+    <div class="game-emoji" aria-hidden="true">{{ g.emoji }}</div>
+    <h2>{{ g.name }}</h2>
+    <p>{{ g.blurb }}</p>
+    {% if wins is not none %}<p class="muted">{{ wins[key] }} {{ "win" if wins[key] == 1 else "wins" }} so far</p>{% endif %}
+    {% if rounds is none %}
+      <a class="button" href="/games/{{ key }}/preview">Try it</a>
+    {% elif rounds.left %}
+      <form method="post" action="/games/{{ key }}/play"><button class="primary">Play {{ g.name }}</button></form>
+    {% else %}
+      <button disabled>🔒 Locked</button>
+    {% endif %}
+  </article>
+{% endfor %}
+</div>
+{% endblock %}

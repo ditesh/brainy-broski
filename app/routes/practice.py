@@ -78,8 +78,10 @@ def render_home(request: Request, db: Session, user: User, contest: str = "", le
     today = daily.local_today(request.app.state.settings.timezone).isoformat()
     new_bonus = _settle_and_announce(request, db, user)
     goal, buddy_pet = child_goal(request, db, user), _buddy(db, user)
-    mission = lines = None
+    mission = lines = brain = None
     if user.role == Role.child:
+        from app.games import rounds_left
+        brain = rounds_left(db, user, request.app.state.settings.timezone)
         from datetime import datetime
         from zoneinfo import ZoneInfo
         from app.mission import buddy_lines, mission_for
@@ -87,7 +89,7 @@ def render_home(request: Request, db: Session, user: User, contest: str = "", le
         now = datetime.now(ZoneInfo(request.app.state.settings.timezone))
         lines = buddy_lines(user, buddy_pet, goal, mission, now)
     return render(request, "practice_home.html", status_code=status_code, new_bonus=new_bonus,
-                  mission=mission, buddy_lines=lines,
+                  mission=mission, buddy_lines=lines, brain=brain,
                   wonder_hidden=request.session.get("wonder_hidden") == today, goal=goal,
                   buddy=buddy_pet,
                   contests=contests, contest=contest, levels=choices,

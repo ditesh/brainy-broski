@@ -44,6 +44,7 @@
 </section>
 {% endif %}
 {% if goal %}{% with goal_next = "/practice" %}{% include "_goal_card.html" %}{% endwith %}{% endif %}
+{% if brain %}{% include "games/_brain_break.html" %}{% endif %}
 {% if not wonder_hidden %}
 <section class="card wonder" id="wonder" aria-labelledby="wonder-title">
   <div class="row wonder-head">

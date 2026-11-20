@@ -1,0 +1,45 @@
+/* Brain-break games: home card, games page, Stone Duel and Target 24. */
+.brain-break { display: flex; gap: 14px; align-items: center; }
+.brain-break h2 { margin: 0 0 4px; }
+.brain-break p { margin: 0 0 8px; }
+.brain-break .brain-icon { font-size: 2.6rem; line-height: 1; filter: grayscale(.8); opacity: .6; }
+.brain-break.ready { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+.brain-break.ready .brain-icon { filter: none; opacity: 1; animation: brain-wiggle 2.4s ease-in-out infinite; }
+@keyframes brain-wiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-12deg); } 90% { transform: rotate(10deg); } 95% { transform: rotate(-6deg); } }
+
+.game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.game-card { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.game-card h2 { margin: 4px 0; }
+.game-card p { margin: 0 0 8px; }
+.game-emoji { font-size: 3rem; line-height: 1; }
+
+.game { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.opponent { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.opponent .robot { font-size: 4.5rem; line-height: 1; }
+.game.won { border-color: var(--good); }
+.game-over { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.game-over[hidden] { display: none; }
+.game-over-text { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-heavy); }
+
+/* Stone Duel */
+.nim-count { margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-heavy); }
+.nim-left { font-size: var(--fs-2xl); font-weight: var(--fw-black); color: var(--accent); }
+.nim-pile { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 420px; min-height: 40px; }
+.stone { width: 30px; height: 26px; border-radius: 50% 50% 46% 46%;
+         background: radial-gradient(circle at 35% 30%, #c9c3b8, #8a8277 60%, #5f584f);
+         box-shadow: 0 2px 0 rgba(0, 0, 0, .2); animation: stone-in .2s ease-out; }
+@keyframes stone-in { from { transform: scale(.6); opacity: 0; } }
+.nim-moves { justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+/* Target 24 */
+.tiles, .ops { justify-content: center; gap: 10px; flex-wrap: wrap; }
+.tile { min-width: 64px; min-height: 64px; border-radius: 16px; font-size: var(--fs-2xl); font-weight: var(--fw-black);
+        background: var(--card); color: var(--fg); border: 3px solid var(--line); }
+.tile.picked, .ops button.picked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+.ops button { min-width: 52px; min-height: 52px; font-size: var(--fs-xl); font-weight: var(--fw-black); border: 3px solid var(--line); }
+.target-steps { min-height: 1.5em; margin: 0; }
+.target-tools { justify-content: center; gap: 14px; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brain-break.ready .brain-icon, .stone { animation: none; }
+}

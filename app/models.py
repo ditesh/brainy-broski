@@ -212,6 +212,17 @@ class WeeklyGoal(Base):
     set_on: Mapped[date | None] = mapped_column(Date, nullable=True)  # local day it was last set
 
 
+class GamePlay(Base):
+    """One brain-break round he started (uses up a round), and how it went."""
+    __tablename__ = "game_play"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    game: Mapped[str] = mapped_column(String(32))
+    puzzle: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    won: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
 class PetBonus(Base):
     """Extra growth for one pet: the bonus egg for meeting a week's goal (one per week)."""
     __tablename__ = "pet_bonus"
