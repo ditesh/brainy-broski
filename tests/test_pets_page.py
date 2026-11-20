@@ -75,3 +75,12 @@ def test_no_pets_on_question_pages(child_client, db, child, junior_paper):
     _grow(db, child, junior_paper, "parity", [6])
     a = start_attempt(db, child, junior_paper, "practice", [1])
     assert 'class="pet-slot' not in child_client.get(f"/attempts/{a.id}?q=1").text
+
+
+def test_pets_have_maths_powers_not_tricks(child_client, db, child, junior_paper):
+    _grow(db, child, junior_paper, "parity", [6])
+    html = child_client.get("/pets").text
+    assert "trick" not in html.lower()
+    assert f"{CREATURES['parity'].name}'s maths power" in html.replace("&#39;", "'")
+    assert "Power: Odd and even" in html
+    assert "This egg's maths power" in html.replace("&#39;", "'")   # eggs keep their name secret

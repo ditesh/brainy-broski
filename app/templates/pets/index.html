@@ -4,7 +4,7 @@
 {% block back %}<a class="back" href="/practice">← Practice</a>{% endblock %}
 {% block content %}
 <h1>My pets 🐾</h1>
-<p class="hello">Every maths trick has its own pet. Solve problems that use a trick and its pet grows — harder problems make it grow faster!</p>
+<p class="hello">Every pet has a maths power. Solve problems that use a pet's power and it grows — harder problems make it grow faster!</p>
 {% if error %}{{ alert("error", error) }}{% endif %}
 {% if saved %}{{ alert("success", saved ~ " is your buddy now!") }}{% endif %}
 {% if not pets %}
@@ -15,11 +15,11 @@
   <article class="card pet-card{% if p.c.tag == buddy %} is-buddy{% endif %}">
     {{ pet(p.c, p.state.stage, size=130) }}
     <h2>{% if p.state.stage == "egg" %}Mystery egg{% else %}{{ p.c.name }}{% endif %}</h2>
-    <p class="pet-technique">{{ p.technique }}</p>
+    <p class="pet-technique">Power: {{ p.technique }}</p>
     <div class="pet-bar" role="progressbar" aria-valuemin="0" aria-valuemax="15" aria-valuenow="{{ p.state.points }}"><i style="width:{{ p.pct }}%"></i></div>
     <p class="muted pet-progress">{{ p.progress }}</p>
     <details>
-      <summary>About this trick</summary>
+      <summary>{% if p.state.stage == "egg" %}This egg's maths power{% else %}{{ p.c.name }}'s maths power{% endif %}</summary>
       <p>{{ p.about }}</p>
       <p class="muted">Right first time: +1 to +3 (harder questions give more). Fixed a miss later: +1.</p>
     </details>
@@ -30,5 +30,5 @@
   </article>
 {% endfor %}
 </div>
-{% if mystery %}<p class="mystery">🥚 {{ mystery }} more to discover — new pets appear as you meet new tricks.</p>{% endif %}
+{% if mystery %}<p class="mystery">🥚 {{ mystery }} more to discover — new pets appear as you meet new maths powers.</p>{% endif %}
 {% endblock %}
