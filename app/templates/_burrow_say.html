@@ -1,0 +1,23 @@
+{# What the burrow pet says. Needs: a, q, kind, state (ready|failed|thinking|foggy), answer; text / step / solution. #}
+<div class="burrow-say say-{{ state }}" aria-live="polite"
+     {% if state == "thinking" %}hx-get="/attempts/{{ a.id }}/help?q={{ q }}&kind={{ kind }}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  {% if state == "thinking" %}
+    <p class="thinking">Hmm, let me think… 🤔</p>
+    {% if kind == "solution" %}<p class="muted">The answer is {{ answer }}. I'm working out the steps…</p>{% endif %}
+  {% elif kind == "hint" %}
+    <p>{{ text }}</p>
+  {% elif state == "foggy" %}
+    <p>{{ foggy }}</p>
+    {% if kind == "solution" %}<p><strong>The answer is {{ answer }}.</strong></p>{% endif %}
+  {% elif state == "failed" %}
+    {% if kind == "solution" %}<p>I couldn't work out the steps for this one, sorry!</p><p><strong>The answer is {{ answer }}.</strong></p>
+    {% else %}<p>I couldn't work out the steps for this one. Try my first hint, or ask me for the answer.</p>{% endif %}
+  {% elif kind == "hint2" %}
+    <p>Here's how to start:</p>
+    <div class="say-step">{{ step | md }}</div>
+  {% else %}
+    <p>Here's how I did it:</p>
+    <div class="say-solution">{{ solution | md }}</div>
+    <p><strong>The answer is {{ answer }}.</strong></p>
+  {% endif %}
+</div>
