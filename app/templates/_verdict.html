@@ -1,0 +1,12 @@
+{# What a practice check said. Needs: verdict, pq, r. #}
+<div class="verdict verdict-{{ verdict }}" role="status">
+  {% if verdict == "right" %}<p class="good">Correct! 🎉</p>
+  {% elif verdict == "right_second" %}<p class="good">Got it on the second go! 💪</p>
+  {% elif verdict == "wrong" %}<p class="bad">Not quite, have another go!</p>
+    <p class="muted">You tried: {{ r.first_answer }}</p>
+  {% else %}
+    <p><strong>The answer is {{ pq.problem.answer }}.</strong></p>
+    {% if r.first_answer %}<p class="muted">You tried: {{ r.first_answer }}{% if r.retry_answer %}, then {{ r.retry_answer }}{% endif %}</p>{% endif %}
+    {% if verdict == "wrong_second" %}<p class="muted">Not this time, but now you know. It'll be in "redo your misses".</p>{% endif %}
+  {% endif %}
+</div>

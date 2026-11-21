@@ -66,7 +66,7 @@
 <h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}
   <div class="card row" style="justify-content:space-between">
-    <span>{{ a.paper.title }}{% if a.redo_of_id %} · redo of misses{% endif %}{% if a.mode == "contest" %} · timed{% endif %} · {{ a.question_numbers | length }} questions</span>
+    <span>{{ a.paper.title }}{% if a.redo_of_id %} · redo of misses{% endif %}{% if a.mode == "contest" %} · exam{% elif a.timer_on %} · timer on{% endif %} · {{ a.question_numbers | length }} questions</span>
     <a class="button primary" href="/attempts/{{ a.id }}">Continue →</a>
   </div>
 {% endfor %}
@@ -103,10 +103,11 @@
       </label>
       <label>Mode
         <select name="mode">
-          <option value="practice">🧘 Practice (no timer)</option>
-          {% if p.duration_min %}<option value="contest">⏱️ Contest ({{ p.duration_min }} min timer)</option>{% endif %}
+          <option value="practice">🧘 Practice (check as you go, pet can help)</option>
+          {% if p.duration_min %}<option value="contest">⏱️ Exam ({{ p.duration_min }} min, like the real thing)</option>{% endif %}
         </select>
       </label>
+      {% if p.duration_min %}<label class="check-row"><input type="checkbox" name="timer" value="1"> Use a timer in practice ({{ p.duration_min }} min)</label>{% endif %}
       <button class="primary">Start! 🚀</button>
     </form>
   </details>

@@ -235,3 +235,21 @@ input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-of
 .mcq-choice.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
 .mcq-choice.selected .mcq-letter { background: var(--accent); color: var(--accent-fg); }
 .mcq-hint { margin: 6px 0 0; font-size: var(--fs-sm); }
+
+/* Practice checks */
+.verdict { padding: 10px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 7%, var(--card)); }
+.verdict p { margin: 2px 0; }
+.verdict-right, .verdict-right_second { background: var(--good-bg); }
+.verdict-wrong { background: var(--bad-bg); }
+.verdict .good, .verdict .bad { font-weight: var(--fw-heavy); font-size: var(--fs-lg); }
+.answer-actions { flex-wrap: wrap; gap: 10px; align-items: center; }
+.give-up { color: var(--muted); }
+.mcq-choice.wrong { border-color: var(--bad); background: var(--bad-bg); opacity: .75; }
+.mcq-choice.wrong .mcq-letter { background: var(--bad); color: #fff; }
+.mcq-choice.right { border-color: var(--good); background: var(--good-bg); }
+.mcq-choice.right .mcq-letter { background: var(--good); color: #fff; }
+.mcq-choice:disabled { cursor: default; }
+.mcq button.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.check-row { flex-direction: row; align-items: center; gap: 8px; font-weight: var(--fw-bold); }
+.check-row input { width: auto; min-height: 0; }
+.timer.up { font-size: var(--fs-sm); background: var(--sun); color: #1f2140; }

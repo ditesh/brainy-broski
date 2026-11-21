@@ -32,14 +32,20 @@ _NEXT_OPTION = re.compile(r"\s+(?=\([B-E]\)\s)")
 
 
 def _option_item(o: str, choose: dict | None) -> str:
-    """One option: plain text to read, or (when he's answering) a button that picks it."""
+    """One option: plain text to read, or (when he's answering) a button that picks it.
+    choose: form (id), selected, and in practice: formaction (a tap checks it), wrong (letters already tried),
+    right (the answer, once shown), done (finished: buttons disabled)."""
     if not choose:
         return f"<li>{md(o.strip(), inline=True)}</li>"
     letter = _OPTION.match(o).group(1)
     body = md(_OPTION.sub("", o, count=1).strip(), inline=True)
     sel = choose.get("selected") == letter
+    cls = "mcq-choice" + (" selected" if sel else "") + (" wrong" if letter in (choose.get("wrong") or ()) else "")
+    cls += " right" if choose.get("right") == letter else ""
+    extra = f' formaction="{escape(choose["formaction"])}"' if choose.get("formaction") else ""
+    extra += " disabled" if choose.get("done") else ""
     return (f'<li><button type="submit" form="{escape(choose["form"])}" name="answer" value="{letter}" '
-            f'class="mcq-choice{" selected" if sel else ""}" aria-pressed="{"true" if sel else "false"}">'
+            f'class="{cls}" aria-pressed="{"true" if sel else "false"}"{extra}>'
             f'<span class="mcq-letter">{letter}</span><span class="mcq-text">{body}</span></button></li>')
 
 

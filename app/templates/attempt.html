@@ -3,42 +3,63 @@
 {% block content %}
 <div class="row" style="justify-content:space-between">
   <strong>{{ a.paper.title }}</strong>
-  {% if deadline %}<span class="timer" id="timer" data-deadline="{{ deadline }}">--:--</span>{% endif %}
+  {% if deadline %}<span class="timer" id="timer" data-deadline="{{ deadline }}"{% if practice %} data-soft{% endif %}>--:--</span>{% endif %}
 </div>
 <nav class="navgrid" aria-label="Questions">
   {% for n in numbers %}
   <a href="/attempts/{{ a.id }}?q={{ n }}" class="{% if n in answered %}answered{% endif %} {% if n == current %}current{% endif %}">{{ n }}</a>
   {% endfor %}
 </nav>
+{% set t = pq.problem.answer_type.value %}
+{% set tap_options = t == "mcq" and not pq.show_original and has_mcq_options(pq.problem.transcription) %}
+{% set checked = practice and r.checked_at is not none %}
+{% set finished = practice and r.locked %}
+{% set retrying = checked and not finished %}
+{% set go_after = current if (practice and t == "mcq") else (next or current) %}
+{% set tried = [r.first_answer] if r.correct_first == false else [] %}
+{% if r.correct_retry == false %}{% set tried = tried + [r.retry_answer] %}{% endif %}
 <div class="card">
   <p><strong>Question {{ current }}</strong> <span class="muted">· {{ pq.points }} point{{ "s" if pq.points != 1 }}</span></p>
-  {% set t = pq.problem.answer_type.value %}
-  {% set tap_options = t == "mcq" and not pq.show_original and has_mcq_options(pq.problem.transcription) %}
-  {% if tap_options %}{% set choose = {"form": "answer-form", "selected": r.first_answer} %}{% endif %}
+  {% if tap_options %}
+    {% if finished %}{% set choose = {"form": "answer-form", "selected": r.retry_answer or r.first_answer, "wrong": tried, "right": pq.problem.answer, "done": True} %}
+    {% elif retrying %}{% set choose = {"form": "answer-form", "selected": None, "wrong": tried, "formaction": "/attempts/" ~ a.id ~ "/check"} %}
+    {% else %}{% set choose = {"form": "answer-form", "selected": r.first_answer} %}{% endif %}
+  {% endif %}
   {% include "_question.html" %}
-  {% if tap_options %}<p class="muted mcq-hint">Tap your answer.</p>{% endif %}
+  {% if tap_options and not finished %}<p class="muted mcq-hint">{% if retrying %}Tap another answer.{% elif practice %}Tap your answer, then Check.{% else %}Tap your answer.{% endif %}</p>{% endif %}
 </div>
 <form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack" style="max-width:none">
   <input type="hidden" name="q" value="{{ current }}">
-  {% if tap_options %}
-    {# the options in the question are the answer buttons #}
+  {% if verdict %}{% include "_verdict.html" %}{% endif %}
+  {% if finished or tap_options %}
+    {# finished: nothing to type; tap_options: the options in the question are the answer buttons #}
   {% elif t == "mcq" %}
     <div class="mcq">
       {% for letter in "ABCDE" %}
-      <button name="answer" value="{{ letter }}" class="{% if r.first_answer == letter %}selected{% endif %}"
-              onclick="this.form.go.value='{{ next or current }}'">{{ letter }}</button>
+      <button name="answer" value="{{ letter }}" class="{% if r.first_answer == letter and not retrying %}selected{% endif %}{% if letter in tried %} wrong{% endif %}"
+              {% if retrying %}formaction="/attempts/{{ a.id }}/check"{% endif %}
+              onclick="this.form.go.value='{{ go_after }}'">{{ letter }}</button>
       {% endfor %}
     </div>
   {% else %}
-    <label>Your answer
-      <input name="answer" value="{{ r.first_answer or '' }}" autocomplete="off"
+    <label>{% if retrying %}Your second try{% else %}Your answer{% endif %}
+      <input name="answer" value="{{ '' if checked else (r.first_answer or '') }}" autocomplete="off"
              {% if t == "integer" %}inputmode="numeric"{% elif t == "fraction" %}inputmode="text" placeholder="e.g. 3/4"{% endif %}>
     </label>
   {% endif %}
-  <input type="hidden" name="go" value="{{ next or current }}">
-  <div class="row">
-    {% if prev %}<button onclick="this.form.go.value='{{ prev }}'">← Back</button>{% endif %}
-    {% if t != "mcq" %}<button class="primary" onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>{% endif %}
+  <input type="hidden" name="go" value="{{ go_after }}">
+  <div class="row answer-actions">
+    {% if checked %}
+      {% if prev %}<a class="button" href="/attempts/{{ a.id }}?q={{ prev }}">← Back</a>{% endif %}
+      {% if next %}<a class="button{% if finished %} primary{% endif %}" href="/attempts/{{ a.id }}?q={{ next }}">Next →</a>{% endif %}
+    {% else %}
+      {% if prev %}<button onclick="this.form.go.value='{{ prev }}'">← Back</button>{% endif %}
+      {% if t != "mcq" %}<button{% if not practice %} class="primary"{% endif %} onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>{% endif %}
+    {% endif %}
+    {% if practice and not finished %}
+      {% if t != "mcq" or (r.first_answer and not retrying) %}<button class="primary" formaction="/attempts/{{ a.id }}/check">Check ✓</button>{% endif %}
+      <button class="link give-up" formaction="/attempts/{{ a.id }}/giveup">I give up</button>
+    {% endif %}
   </div>
 </form>
 <form method="post" action="/attempts/{{ a.id }}/submit" id="submit-form" style="margin-top:28px;text-align:center"
@@ -54,6 +75,7 @@
   function tick() {
     var left = Math.max(0, Math.round((end - Date.now()) / 1000));
     el.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+    if (left === 0 && "soft" in el.dataset) { el.textContent = "Time's up! Keep going or hand in."; el.classList.add("up"); return; }
     if (left === 0) { var f = document.getElementById("answer-form"); f.go.value = "submit"; f.submit(); return; }
     setTimeout(tick, 1000);
   }

@@ -25,15 +25,34 @@ def start_attempt(db: Session, user: User, paper: Paper, mode: str, question_num
 
 
 def deadline(attempt: Attempt) -> datetime | None:
+    """When the clock runs out: exams, and practice with the timer switched on (which never hands in)."""
     mins = attempt.paper.duration_min
-    if attempt.mode != "contest" or not mins:
+    if not mins or not (attempt.mode == "contest" or attempt.timer_on):
         return None
     return attempt.started_at + timedelta(minutes=mins)
 
 
 def is_expired(attempt: Attempt) -> bool:
+    """Only an exam is handed in when time runs out."""
     d = deadline(attempt)
-    return d is not None and utcnow() >= d
+    return attempt.mode == "contest" and d is not None and utcnow() >= d
+
+
+def verdict(r: Response) -> str | None:
+    """What the practice check said about this question so far (None: not checked)."""
+    if r.gave_up:
+        return "gave_up"
+    if r.correct_first is True and r.checked_at is not None:
+        return "right"
+    if r.correct_retry is True:
+        return "right_second"
+    if r.correct_retry is False:
+        return "wrong_second"
+    if r.solution_seen:
+        return "gave_up"
+    if r.checked_at is not None and r.correct_first is False:
+        return "wrong"
+    return None
 
 
 def response_for(attempt: Attempt, number: int) -> Response:

@@ -8,7 +8,7 @@ from app.auth import require_user
 from app.goals import goal_status
 from app.db import get_db
 from app.models import Attempt, Paper, Response, Role, SourcePdf, User
-from app.practice.service import (deadline, is_expired, misses, paper_status, response_for, save_answer,
+from app.practice.service import (check_answer, give_up, verdict, deadline, is_expired, misses, paper_status, response_for, save_answer,
                                   start_attempt, start_redo, submit, submit_retry)
 from app.web import render
 
@@ -159,7 +159,7 @@ def mission_start(paper_id: int = Form(...), numbers: str = Form(""), user: User
 
 @router.post("/practice/start")
 def practice_start(paper_id: int = Form(...), mode: str = Form("practice"), part: str = Form(""),
-                   user: User = Depends(require_user), db: Session = Depends(get_db)):
+                   timer: str = Form(""), user: User = Depends(require_user), db: Session = Depends(get_db)):
     paper = db.get(Paper, paper_id)
     if paper is None or not paper.published:
         raise HTTPException(404)
@@ -167,7 +167,7 @@ def practice_start(paper_id: int = Form(...), mode: str = Form("practice"), part
     if part and not numbers:
         raise HTTPException(400, "No questions in that part.")
     try:
-        a = start_attempt(db, user, paper, mode, numbers)
+        a = start_attempt(db, user, paper, mode, numbers, timer_on=timer == "1")
     except ValueError:
         raise HTTPException(400, "No questions in that part.")
     return RedirectResponse(f"/attempts/{a.id}?q={a.question_numbers[0]}", status_code=303)
@@ -196,7 +196,48 @@ def attempt_page(attempt_id: int, request: Request, q: int | None = None, user: 
     return render(request, "attempt.html", a=a, r=r, pq=r.paper_question, numbers=numbers, current=current,
                   prev=numbers[idx - 1] if idx > 0 else None,
                   next=numbers[idx + 1] if idx + 1 < len(numbers) else None,
-                  answered=answered, deadline=d.isoformat() + "Z" if d else None)
+                  answered=answered, deadline=d.isoformat() + "Z" if d else None,
+                  practice=a.mode != "contest", verdict=verdict(r), just=request.query_params.get("v"))
+
+
+def _practice_attempt(db: Session, attempt_id: int, user: User, q: int):
+    """The attempt for a practice action, or a redirect to its results if it's already handed in."""
+    a = get_attempt(db, attempt_id, user)
+    if _expire_if_needed(db, a) or a.submitted_at is not None:
+        return a, RedirectResponse(f"/attempts/{a.id}/results", status_code=303)
+    if a.mode == "contest":
+        raise HTTPException(403, "No checking in an exam.")
+    if q not in a.question_numbers:
+        raise HTTPException(400)
+    return a, None
+
+
+@router.post("/attempts/{attempt_id}/check")
+def attempt_check(attempt_id: int, q: int = Form(...), answer: str = Form(""), user: User = Depends(require_user),
+                  db: Session = Depends(get_db)):
+    a, done = _practice_attempt(db, attempt_id, user, q)
+    if done:
+        return done
+    r = response_for(a, q)
+    raw = answer.strip() or (r.first_answer if r.checked_at is None else "") or ""  # a tapped option is already saved
+    try:
+        v = check_answer(db, a, q, raw)
+    except ValueError:
+        raise HTTPException(400)
+    return RedirectResponse(f"/attempts/{a.id}?q={q}&v={v}", status_code=303)
+
+
+@router.post("/attempts/{attempt_id}/giveup")
+def attempt_give_up(attempt_id: int, q: int = Form(...), answer: str = Form(""), user: User = Depends(require_user),
+                    db: Session = Depends(get_db)):
+    a, done = _practice_attempt(db, attempt_id, user, q)
+    if done:
+        return done
+    try:
+        give_up(db, a, q, answer)
+    except ValueError:
+        raise HTTPException(400)
+    return RedirectResponse(f"/attempts/{a.id}?q={q}&v=gave_up", status_code=303)
 
 
 @router.post("/attempts/{attempt_id}/answer")
