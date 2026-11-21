@@ -43,7 +43,7 @@ def _option_item(o: str, choose: dict | None) -> str:
     cls = "mcq-choice" + (" selected" if sel else "") + (" wrong" if letter in (choose.get("wrong") or ()) else "")
     cls += " right" if choose.get("right") == letter else ""
     extra = f' formaction="{escape(choose["formaction"])}"' if choose.get("formaction") else ""
-    extra += " disabled" if choose.get("done") else ""
+    extra += " disabled" if choose.get("done") or letter in (choose.get("wrong") or ()) else ""
     return (f'<li><button type="submit" form="{escape(choose["form"])}" name="answer" value="{letter}" '
             f'class="{cls}" aria-pressed="{"true" if sel else "false"}"{extra}>'
             f'<span class="mcq-letter">{letter}</span><span class="mcq-text">{body}</span></button></li>')

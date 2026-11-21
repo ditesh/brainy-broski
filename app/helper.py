@@ -7,6 +7,7 @@ from typing import Callable
 
 from fastapi import FastAPI
 
+from app.ai.client import ensure_ai
 from app.diagnosis.service import ensure_reference_solution
 from app.models import PaperQuestion, Problem
 from app.techniques import TECHNIQUES
@@ -67,7 +68,7 @@ def _solve(app: FastAPI, problem_id: int) -> None:
         problem = db.get(Problem, problem_id)
         pq = db.query(PaperQuestion).filter(PaperQuestion.problem_id == problem_id).first()
         crops = [app.state.settings.data_dir / p for p in (pq.crop_paths if pq else [])]
-        ensure_reference_solution(db, problem, crops, app.state.ai)
+        ensure_reference_solution(db, problem, crops, ensure_ai(app))
         if problem.verified is None:
             _errors[problem_id] = getattr(problem, "_last_error", "unreachable")
     except Exception:

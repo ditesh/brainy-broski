@@ -221,6 +221,8 @@ def attempt_check(attempt_id: int, q: int = Form(...), answer: str = Form(""), u
         return done
     r = response_for(a, q)
     raw = answer.strip() or (r.first_answer if r.checked_at is None else "") or ""  # a tapped option is already saved
+    if not raw.strip():
+        return RedirectResponse(f"/attempts/{a.id}?q={q}&v=empty", status_code=303)
     try:
         v = check_answer(db, a, q, raw)
     except ValueError:

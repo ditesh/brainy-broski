@@ -88,7 +88,7 @@ def test_check_after_hand_in_redirects(child_client, db, child, junior_paper):
 
 def test_bad_check_input(child_client, db, child, junior_paper):
     a = start_attempt(db, child, junior_paper, "practice", [1, 2])
-    assert child_client.post(f"/attempts/{a.id}/check", data={"q": "1", "answer": " "}).status_code == 400
+    # a blank answer stays on the question with a message (tests/test_review_fixes_burrow.py)
     assert child_client.post(f"/attempts/{a.id}/check", data={"q": "9", "answer": "5"}).status_code == 400
 
 

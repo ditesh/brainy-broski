@@ -106,6 +106,8 @@ def give_up(db: Session, attempt: Attempt, number: int, raw: str | None = None) 
     r = _practice_response(attempt, number)
     if r.locked:
         return r
+    if r.checked_at is None and not (raw and raw.strip()):
+        raw = r.first_answer  # a tapped multiple-choice option is already saved
     if raw and raw.strip() and r.checked_at is None:
         if check_answer(db, attempt, number, raw) == "right":
             return r

@@ -32,14 +32,18 @@
 {% if practice %}{% include "_burrow.html" %}{% endif %}
 <form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack attempt-answer" style="max-width:none">
   <input type="hidden" name="q" value="{{ current }}">
-  {% if verdict %}{% include "_verdict.html" %}{% endif %}
+  {% if verdict %}{% include "_verdict.html" %}{% elif just == "empty" %}<p class="bad" role="status">Type an answer first, then Check.</p>{% endif %}
+  {% if practice and not finished and t != "mcq" %}
+    {# pressing Enter in the box checks the answer (the first submit button is the form's default) #}
+    <button class="sr-only" formaction="/attempts/{{ a.id }}/check" tabindex="-1" aria-hidden="true">Check</button>
+  {% endif %}
   {% if finished or tap_options %}
     {# finished: nothing to type; tap_options: the options in the question are the answer buttons #}
   {% elif t == "mcq" %}
     <div class="mcq">
       {% for letter in "ABCDE" %}
       <button name="answer" value="{{ letter }}" class="{% if r.first_answer == letter and not retrying %}selected{% endif %}{% if letter in tried %} wrong{% endif %}"
-              {% if retrying %}formaction="/attempts/{{ a.id }}/check"{% endif %}
+              {% if retrying %}formaction="/attempts/{{ a.id }}/check"{% endif %}{% if letter in tried %} disabled{% endif %}
               onclick="this.form.go.value='{{ go_after }}'">{{ letter }}</button>
       {% endfor %}
     </div>
@@ -56,7 +60,8 @@
       {% if next %}<a class="button{% if finished %} primary{% endif %}" href="/attempts/{{ a.id }}?q={{ next }}">Next →</a>{% endif %}
     {% else %}
       {% if prev %}<button onclick="this.form.go.value='{{ prev }}'">← Back</button>{% endif %}
-      {% if t != "mcq" %}<button{% if not practice %} class="primary"{% endif %} onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>{% endif %}
+      {% if t != "mcq" %}<button{% if not practice %} class="primary"{% endif %} onclick="this.form.go.value='{{ next or current }}'">{% if next %}Save & next →{% else %}Save{% endif %}</button>
+      {% elif practice and next %}<a class="button" href="/attempts/{{ a.id }}?q={{ next }}">Next →</a>{% endif %}
     {% endif %}
     {% if practice and not finished %}
       {% if t != "mcq" or (r.first_answer and not retrying) %}<button class="primary" formaction="/attempts/{{ a.id }}/check">Check ✓</button>{% endif %}

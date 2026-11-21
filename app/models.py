@@ -189,7 +189,8 @@ class Response(Base):
     @property
     def helped_out(self) -> bool:
         """A miss where he was shown the answer: nothing for Claude to diagnose."""
-        return bool(self.gave_up or (self.solution_seen and not (self.correct_first or self.correct_retry)))
+        # seeing the solution before finishing goes through give_up(); after two wrong tries it's an ordinary miss
+        return bool(self.gave_up)
 
 
 class UploadToken(Base):
