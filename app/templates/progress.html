@@ -61,8 +61,9 @@
 {% for r in misses %}{% set lab = effective_label(r) %}
   <div class="card row" style="justify-content:space-between">
     <a href="/responses/{{ r.id }}/feedback">{{ r.paper_question.paper.title }} Q{{ r.paper_question.number }}</a>
-    {% if lab %}<span class="chip {{ lab.value }}">{{ label_text[lab.value] }}{% if r.parent_override %} (changed){% endif %}</span>{% else %}<span class="muted">not checked yet</span>{% endif %}
-    {% if is_parent %}
+    {% if r.helped_out %}<span class="chip">{% if r.solution_seen %}📖 Saw the solution{% else %}🏳️ Gave up{% endif %}</span>
+    {% elif lab %}<span class="chip {{ lab.value }}">{{ label_text[lab.value] }}{% if r.parent_override %} (changed){% endif %}</span>{% else %}<span class="muted">not checked yet</span>{% endif %}
+    {% if is_parent and not r.helped_out %}
     <form method="post" action="/parent/responses/{{ r.id }}/override" class="row">
       <select name="label" aria-label="Change reason">
         <option value="">— automatic —</option>

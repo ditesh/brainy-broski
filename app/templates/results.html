@@ -57,12 +57,17 @@
   <div class="card {% if r.correct_first or r.correct_retry %}is-good{% elif r.correct_first == false %}is-bad{% endif %}" id="r{{ r.id }}">
     <div class="row" style="justify-content:space-between">
       <strong>Question {{ q.number }}</strong>
-      {% if r.correct_first %}<span class="good">✓ Nailed it</span>
+      {% if r.helped_out %}<span class="muted">{% if r.solution_seen %}📖 Saw the solution{% else %}🏳️ Gave up{% endif %}</span>
+      {% elif r.correct_first %}<span class="good">✓ Nailed it{% if r.hints_used %} <small class="muted">· used a hint</small>{% endif %}</span>
       {% elif r.correct_first is none %}<span class="muted">Not answered</span>
-      {% elif r.correct_retry %}<span class="good">✓ Fixed on second try</span>
+      {% elif r.correct_retry %}<span class="good">✓ Fixed on second try{% if r.hints_used %} <small class="muted">· used a hint</small>{% endif %}</span>
       {% else %}<span class="bad">✗ Not quite{% if q.penalty %} <small>(−{{ q.penalty }} point{{ "s" if q.penalty != 1 }})</small>{% endif %}</span>{% endif %}
     </div>
-    {% if r.correct_first == false %}
+    {% if r.helped_out %}
+      {% with pq = q %}{% include "_question.html" %}{% endwith %}
+      <p class="muted">The answer is {{ q.problem.answer }}.{% if r.first_answer %} Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}.{% endif %}
+        {% if r.hints_used %}You used a hint. {% endif %}It's in "redo my misses" for another go later.</p>
+    {% elif r.correct_first == false %}
       {% with pq = q %}{% include "_question.html" %}{% endwith %}
       <p class="muted">Your answer: {{ r.first_answer }}{% if r.retry_answer %} · second try: {{ r.retry_answer }}{% endif %}</p>
       {% if r.retry_answer is none and is_owner %}

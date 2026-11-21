@@ -18,7 +18,7 @@ MAX_BYTES = 25 * 1024 * 1024
 
 
 def _photo_allowed(r: Response) -> None:
-    if not (r.correct_first is False and r.correct_retry is False):
+    if not (r.correct_first is False and r.correct_retry is False) or r.helped_out:
         raise HTTPException(400, "A photo is only needed for questions still wrong after the second try.")
 
 
