@@ -151,6 +151,7 @@ class Attempt(Base):
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     redo_of_id: Mapped[int | None] = mapped_column(ForeignKey("attempt.id"), nullable=True)
+    timer_on: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # practice: show a timer, never hand in
     paper: Mapped[Paper] = relationship()
     user: Mapped[User] = relationship()
     responses: Mapped[list["Response"]] = relationship(back_populates="attempt")
@@ -171,8 +172,24 @@ class Response(Base):
         Enum(DiagnosisStatus), default=DiagnosisStatus.none)
     label: Mapped[Label | None] = mapped_column(Enum(Label), nullable=True)
     parent_override: Mapped[Label | None] = mapped_column(Enum(Label), nullable=True)
+    # practice mode: checked as he went, gave up, help from the pet
+    checked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    gave_up: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    hints_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    solution_seen: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     attempt: Mapped[Attempt] = relationship(back_populates="responses")
     paper_question: Mapped[PaperQuestion] = relationship()
+
+    @property
+    def locked(self) -> bool:
+        """No more changes: right, both tries used, gave up, or saw the solution."""
+        return bool(self.gave_up or self.correct_first is True or self.correct_retry is not None
+                    or self.solution_seen)
+
+    @property
+    def helped_out(self) -> bool:
+        """A miss where he was shown the answer: nothing for Claude to diagnose."""
+        return bool(self.gave_up or (self.solution_seen and not (self.correct_first or self.correct_retry)))
 
 
 class UploadToken(Base):

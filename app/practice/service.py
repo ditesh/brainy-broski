@@ -7,13 +7,14 @@ from app.models import Attempt, DiagnosisStatus, Label, Paper, Response, User, u
 
 
 def start_attempt(db: Session, user: User, paper: Paper, mode: str, question_numbers: list[int] | None,
-                  redo_of: "Attempt | None" = None) -> Attempt:
+                  redo_of: "Attempt | None" = None, timer_on: bool = False) -> Attempt:
     by_number = {q.number: q for q in paper.questions}
     numbers = sorted(by_number) if not question_numbers else sorted(set(question_numbers))
     if not numbers or any(n not in by_number for n in numbers):
         raise ValueError("Those questions aren't in this paper.")
     a = Attempt(user_id=user.id, paper_id=paper.id, mode="contest" if mode == "contest" else "practice",
-                question_numbers=numbers, redo_of_id=redo_of.id if redo_of else None)
+                question_numbers=numbers, redo_of_id=redo_of.id if redo_of else None,
+                timer_on=bool(timer_on and mode != "contest" and paper.duration_min) or None)
     db.add(a)
     db.flush()
     for n in numbers:
@@ -46,8 +47,55 @@ def save_answer(db: Session, attempt: Attempt, number: int, raw: str) -> None:
     if attempt.submitted_at is not None:
         raise ValueError("This paper has already been handed in.")
     r = response_for(attempt, number)
+    if r.locked or r.checked_at is not None:
+        raise ValueError("This answer has been checked already.")
     r.first_answer = raw.strip() or None
     db.commit()
+
+
+def _practice_response(attempt: Attempt, number: int) -> Response:
+    if attempt.mode == "contest":
+        raise ValueError("No checking in an exam.")
+    if attempt.submitted_at is not None:
+        raise ValueError("This paper has already been handed in.")
+    return response_for(attempt, number)
+
+
+def check_answer(db: Session, attempt: Attempt, number: int, raw: str) -> str:
+    """Practice: mark this answer now. First check → right/wrong; after a wrong one, a second try →
+    right_second/wrong_second (then the answer is shown). Returns which happened."""
+    r = _practice_response(attempt, number)
+    if r.locked:
+        raise ValueError("This question is finished.")
+    if not raw.strip():
+        raise ValueError("Type an answer first.")
+    p = r.paper_question.problem
+    if r.checked_at is None:
+        r.first_answer = raw.strip()
+        r.correct_first = is_correct(raw, p.answer, p.answer_type)
+        r.checked_at = utcnow()
+        db.commit()
+        return "right" if r.correct_first else "wrong"
+    _apply_retry(r, raw)
+    db.commit()
+    return "right_second" if r.correct_retry else "wrong_second"
+
+
+def give_up(db: Session, attempt: Attempt, number: int, raw: str | None = None) -> Response:
+    """Practice: show the answer. A typed, unchecked answer is checked first as his answer; unless it was right,
+    the question counts as given up (a miss; a blank give-up loses no points)."""
+    r = _practice_response(attempt, number)
+    if r.locked:
+        return r
+    if raw and raw.strip() and r.checked_at is None:
+        if check_answer(db, attempt, number, raw) == "right":
+            return r
+    r.gave_up = True
+    if r.correct_first is None and r.first_answer is None:
+        r.correct_first = False
+    r.checked_at = r.checked_at or utcnow()
+    db.commit()
+    return r
 
 
 def submit(db: Session, attempt: Attempt) -> Attempt:
@@ -57,6 +105,9 @@ def submit(db: Session, attempt: Attempt) -> Attempt:
     for r in attempt.responses:
         q = r.paper_question
         max_score += q.points
+        if r.gave_up and r.first_answer is None:
+            r.correct_first = False  # gave up on a blank: a miss, but blanks never lose points
+            continue
         if r.first_answer is None:
             r.correct_first = None
             continue
@@ -77,18 +128,24 @@ def submit_retry(db: Session, response: Response, raw: str) -> Response:
         raise ValueError("No retry available for this question.")
     if not raw.strip():
         raise ValueError("Type an answer first.")
+    _apply_retry(response, raw)
+    db.commit()
+    return response
+
+
+def _apply_retry(response: Response, raw: str) -> None:
+    """The second try (in practice, or on the results page). Right second time = a careless slip, self-corrected."""
     p = response.paper_question.problem
     response.retry_answer = raw.strip()
     response.correct_retry = is_correct(raw, p.answer, p.answer_type)
     if response.correct_retry:
         response.label = Label.careless_self_corrected
         response.diagnosis_status = DiagnosisStatus.done
-    db.commit()
-    return response
 
 
 def misses(attempt: Attempt) -> list[Response]:
-    return [r for r in attempt.responses if r.correct_first is False and r.correct_retry is not True]
+    return [r for r in attempt.responses
+            if r.correct_first is False and r.correct_retry is not True and not r.helped_out]
 
 
 def start_redo(db: Session, attempt: Attempt) -> Attempt:
