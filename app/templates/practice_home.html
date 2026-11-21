@@ -3,6 +3,8 @@
 <h1>Hi {% if user.avatar %}{{ user.avatar }} {% endif %}{{ user.display_name }}!{% if not user.avatar %} 👋{% endif %}</h1>
 <p class="hello">Pick a challenge and show those problems who's boss.</p>
 {% if number_fact %}<p class="muted fav-number">🔢 Your number: {{ number_fact }}</p>{% endif %}
+<div class="home-layout">
+<aside class="home-side" aria-label="Your mission, goal and extras">
 {% if new_bonus %}{% from "pets/_pet.html" import pet %}
 <section class="card celebrate-goal bonus-banner">
   <p class="celebrate-title">🥚 Bonus egg!</p>
@@ -58,6 +60,8 @@
   <details><summary>Why does it work?</summary><div>{{ today_fact.why | md }}</div></details>
 </section>
 {% endif %}
+</aside>
+<div class="home-main">
 {% if in_progress %}
 <h2>⏯️ Carry on where you left off</h2>
 {% for a in in_progress %}
@@ -68,15 +72,15 @@
 {% endfor %}
 {% endif %}
 
-<h2>🎯 Pick a challenge</h2>
+<h2 id="pick">🎯 Pick a challenge</h2>
 {% if not contests %}<p class="muted">No papers ready yet. Ask your parent to add one.</p>{% else %}
 <p class="step">1. Which competition?</p>
 <nav class="picker" aria-label="Competition">
-  {% for c in contests %}<a class="pill" href="/practice?contest={{ c | urlencode }}"{% if c == contest %} aria-current="true"{% endif %}>{{ c }}</a>{% endfor %}
+  {% for c in contests %}<a class="pill" href="/practice?contest={{ c | urlencode }}" data-keep-scroll{% if c == contest %} aria-current="true"{% endif %}>{{ c }}</a>{% endfor %}
 </nav>
 <p class="step">2. Which level?</p>
 <nav class="picker" aria-label="Level">
-  {% for lv in levels %}<a class="pill" href="/practice?contest={{ contest | urlencode }}&amp;level={{ lv | urlencode }}"{% if lv == level %} aria-current="true"{% endif %}>{{ lv }}</a>{% endfor %}
+  {% for lv in levels %}<a class="pill" href="/practice?contest={{ contest | urlencode }}&amp;level={{ lv | urlencode }}" data-keep-scroll{% if lv == level %} aria-current="true"{% endif %}>{{ lv }}</a>{% endfor %}
 </nav>
 <p class="step">3. Pick a paper</p>
 {% for p in shown %}
@@ -118,4 +122,6 @@
   </div>
 {% endfor %}
 {% endif %}
+</div>
+</div>
 {% endblock %}

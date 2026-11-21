@@ -148,5 +148,5 @@ def test_mission_sticks_to_the_level_on_screen(child_client, db, child, papers, 
     _tag(db, papers["Primary"], {})
     _tag(db, junior_paper, {})
     html = child_client.get("/practice?contest=IMONST1&level=Junior").text
-    hero = html[html.index("mission-hero"):html.index("<h2>🎯 Pick a challenge</h2>")]
+    hero = html[html.index("mission-hero"):html.index("goal-card")]
     assert junior_paper.title in hero and papers["Primary"].title not in hero

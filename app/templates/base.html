@@ -46,6 +46,23 @@
       {left: "$$", right: "$$", display: true}, {left: "$", right: "$", display: false}], throwOnError: false});
   }
   window.addEventListener("load", function () { renderMath(document.body); });
+  // Links marked data-keep-scroll (the competition/level pickers) reopen the page where it was, not at the top.
+  (function () {
+    var KEY = "bb-keep-scroll";
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a[data-keep-scroll]");
+      if (!a) return;
+      try { sessionStorage.setItem(KEY, JSON.stringify({ path: location.pathname, y: window.scrollY })); } catch (err) {}
+    });
+    var saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(KEY) || "null"); sessionStorage.removeItem(KEY); } catch (err) {}
+    if (saved && saved.path === location.pathname) {
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      var go = function () { window.scrollTo(0, saved.y); };
+      document.addEventListener("DOMContentLoaded", go);
+      window.addEventListener("load", go);
+    }
+  })();
   document.addEventListener("htmx:afterSwap", function (e) { renderMath(e.target); });
   </script>
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
