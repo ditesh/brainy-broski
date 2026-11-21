@@ -197,7 +197,8 @@ def attempt_page(attempt_id: int, request: Request, q: int | None = None, user: 
                   prev=numbers[idx - 1] if idx > 0 else None,
                   next=numbers[idx + 1] if idx + 1 < len(numbers) else None,
                   answered=answered, deadline=d.isoformat() + "Z" if d else None,
-                  practice=a.mode != "contest", verdict=verdict(r), just=request.query_params.get("v"))
+                  practice=a.mode != "contest", verdict=verdict(r), just=request.query_params.get("v"),
+                  buddy=_buddy(db, user) if a.mode != "contest" else None)
 
 
 def _practice_attempt(db: Session, attempt_id: int, user: User, q: int):

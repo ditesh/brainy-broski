@@ -1,0 +1,38 @@
+{# Practice only: his pet waits in a burrow beside the question. Tap it and it pops out to cheer and help.
+   Needs: a, current, next, r, buddy (dict or None), just (what the last check said, from ?v=). #}
+{% from "pets/_pet.html" import pet %}
+{% set lines = {"right": "Woohoo! You got it! 🎉", "right_second": "Yes! Never give up! 💪",
+                "wrong": "So close! Want a hint?", "wrong_second": "Let's learn this one together.",
+                "gave_up": "No worries — let's learn this one together."} %}
+{% set out = just in lines %}
+{% set who = buddy.c.name if buddy else "Robo" %}
+<aside class="burrow-box{% if out %} out{% endif %}" aria-label="Your pet helper" data-next="{{ '/attempts/' ~ a.id ~ '?q=' ~ next if next else '' }}" data-name="{{ who }}">
+  <div class="burrow-stage" role="button" tabindex="0" aria-expanded="{{ 'true' if out else 'false' }}"
+       aria-label="{{ 'Your pet is out' if out else 'Knock on the burrow for help' }}">
+    <svg class="burrow-back" viewBox="0 0 200 80" aria-hidden="true">
+      <path class="grass" d="M30 34 l4 -14 l3 14 M44 30 l3 -12 l4 12 M150 30 l4 -13 l3 13 M164 34 l3 -11 l4 11"/>
+      <ellipse class="mound" cx="100" cy="62" rx="96" ry="34"/>
+      <ellipse class="hole" cx="100" cy="46" rx="52" ry="13"/>
+    </svg>
+    <div class="burrow-pet">
+      {% if buddy %}{{ pet(buddy.c, buddy.stage, size=170, interactive=False, play="happy" if just in ("right", "right_second") else "") }}
+      {% else %}<span class="robot" aria-hidden="true">🤖</span>{% endif %}
+    </div>
+    <svg class="burrow-front" viewBox="0 0 200 80" aria-hidden="true">
+      <path class="mound" d="M48 46 Q100 66 152 46 Q186 52 196 62 A96 34 0 0 1 4 62 Q14 52 48 46 Z"/>
+      <path class="rim" d="M48 46 Q100 66 152 46"/>
+    </svg>
+  </div>
+  <p class="burrow-call">{% if out %}Ask me anything!{% else %}🐾 {{ who }} is in the burrow. Tap for help!{% endif %}</p>
+  <div class="burrow-panel" {% if not out %}hidden{% endif %}>
+    <div id="burrow-say"><div class="burrow-say"><p>{{ lines.get(just, "Hi! Stuck? I can give you a hint.") }}</p></div></div>
+    <div class="burrow-actions">
+      {% set post = 'hx-post="/attempts/' ~ a.id ~ '/help" hx-target="#burrow-say" hx-swap="innerHTML" hx-include="#answer-form input[name=answer]"' %}
+      <button type="button" {{ post | safe }} hx-vals='{"q": {{ current }}, "kind": "hint"}'>💡 Hint</button>
+      <button type="button" {{ post | safe }} hx-vals='{"q": {{ current }}, "kind": "hint2"}'>👣 Another hint</button>
+      <button type="button" {{ post | safe }} hx-vals='{"q": {{ current }}, "kind": "solution"}'
+              {% if not r.locked %}hx-confirm="Seeing the solution counts as giving up on this question. Show it?"{% endif %}>📖 Show me the solution</button>
+      <button type="button" class="link burrow-bye">Bye! 👋</button>
+    </div>
+  </div>
+</aside>

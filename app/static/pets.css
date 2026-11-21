@@ -125,3 +125,48 @@
 .celebrate-gain { font-size: var(--fs-xl); font-weight: var(--fw-black); color: var(--accent); }
 .new-best { margin: 6px auto 0; }
 
+
+/* ---- Practice: question on the left, the burrow pet on the right (wide); burrow under the question (phone) ---- */
+.container:has(.attempt-layout.with-burrow) { max-width: 1080px; }
+.attempt-layout.with-burrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 20px; }
+@media (min-width: 900px) {
+  .attempt-layout.with-burrow { grid-template-columns: minmax(0, 1fr) 280px; grid-template-rows: auto 1fr; grid-template-areas: "q b" "f b"; align-items: start; }
+  .attempt-layout.with-burrow .attempt-question { grid-area: q; }
+  .attempt-layout.with-burrow .attempt-answer { grid-area: f; }
+  .attempt-layout.with-burrow .burrow-box { grid-area: b; position: sticky; top: 12px; }
+}
+.burrow-box { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 12px; }
+.burrow-stage { position: relative; width: 200px; height: 200px; overflow: hidden; cursor: pointer; border-radius: 0 0 40px 40px; }
+.burrow-stage:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.burrow-back, .burrow-front { position: absolute; left: 0; bottom: 0; width: 200px; height: 80px; }
+.burrow-back { z-index: 0; }
+.burrow-front { z-index: 2; }
+.burrow-pet { position: absolute; left: 50%; bottom: 22px; z-index: 1; transform: translate(-50%, 72%);
+              transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
+.burrow-box.out .burrow-pet { transform: translate(-50%, 0); }
+.burrow-box:not(.out) .burrow-stage:hover .burrow-pet { transform: translate(-50%, 58%); }
+.burrow-pet .robot { display: block; font-size: 96px; line-height: 1; }
+.burrow-back .mound, .burrow-front .mound { fill: #8a5a3b; }
+.burrow-back .hole { fill: #2b1a10; }
+.burrow-front .rim { fill: none; stroke: #a8724d; stroke-width: 5; stroke-linecap: round; }
+.burrow-back .grass { fill: none; stroke: #4caf50; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round;
+                      transform-origin: 50% 100%; animation: grass-sway 3.5s ease-in-out infinite; }
+@keyframes grass-sway { 0%, 100% { transform: skewX(0); } 50% { transform: skewX(-5deg); } }
+.burrow-call { margin: 0; font-weight: var(--fw-heavy); color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.burrow-panel { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.burrow-panel[hidden] { display: none; }
+.burrow-say { background: var(--card); border: 2px solid var(--accent); border-radius: 16px; padding: 10px 14px;
+              animation: speech-pop .25s ease-out; }
+.burrow-say p { margin: 4px 0; }
+.burrow-say .thinking { animation: think-bob 1s ease-in-out infinite; }
+@keyframes think-bob { 50% { transform: translateY(-3px); } }
+.say-solution ol, .say-step ol { padding-left: 20px; margin: 4px 0; }
+.burrow-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.burrow-actions button { font-size: var(--fs-sm); }
+@media (prefers-reduced-motion: reduce) {
+  .burrow-pet { transition: none; }
+  .burrow-back .grass, .burrow-say, .burrow-say .thinking { animation: none; }
+}
+@media (max-width: 899px) {
+  .burrow-box:not(.out) .burrow-stage { height: 96px; }   /* closed on a phone: just the mound, answer stays close */
+}

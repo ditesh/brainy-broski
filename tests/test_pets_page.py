@@ -71,9 +71,9 @@ def test_parent_redirected_to_preview(parent_client):
     assert r.status_code == 303 and r.headers["location"] == "/parent/pets/preview"
 
 
-def test_no_pets_on_question_pages(child_client, db, child, junior_paper):
+def test_no_pets_on_exam_pages(child_client, db, child, junior_paper):
     _grow(db, child, junior_paper, "parity", [6])
-    a = start_attempt(db, child, junior_paper, "practice", [1])
+    a = start_attempt(db, child, junior_paper, "contest", [1])   # practice has the burrow pet instead
     assert 'class="pet-slot' not in child_client.get(f"/attempts/{a.id}?q=1").text
 
 

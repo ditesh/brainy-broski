@@ -18,7 +18,8 @@
 {% set go_after = current if (practice and t == "mcq") else (next or current) %}
 {% set tried = [r.first_answer] if r.correct_first == false else [] %}
 {% if r.correct_retry == false %}{% set tried = tried + [r.retry_answer] %}{% endif %}
-<div class="card">
+<div class="attempt-layout{% if practice %} with-burrow{% endif %}">
+<div class="card attempt-question">
   <p><strong>Question {{ current }}</strong> <span class="muted">· {{ pq.points }} point{{ "s" if pq.points != 1 }}</span></p>
   {% if tap_options %}
     {% if finished %}{% set choose = {"form": "answer-form", "selected": r.retry_answer or r.first_answer, "wrong": tried, "right": pq.problem.answer, "done": True} %}
@@ -28,7 +29,8 @@
   {% include "_question.html" %}
   {% if tap_options and not finished %}<p class="muted mcq-hint">{% if retrying %}Tap another answer.{% elif practice %}Tap your answer, then Check.{% else %}Tap your answer.{% endif %}</p>{% endif %}
 </div>
-<form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack" style="max-width:none">
+{% if practice %}{% include "_burrow.html" %}{% endif %}
+<form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack attempt-answer" style="max-width:none">
   <input type="hidden" name="q" value="{{ current }}">
   {% if verdict %}{% include "_verdict.html" %}{% endif %}
   {% if finished or tap_options %}
@@ -62,6 +64,7 @@
     {% endif %}
   </div>
 </form>
+</div>
 <form method="post" action="/attempts/{{ a.id }}/submit" id="submit-form" style="margin-top:28px;text-align:center"
       onsubmit="return confirm('Hand in your paper? You answered {{ answered | length }} of {{ numbers | length }}.')">
   <button>📮 Hand in paper</button>
