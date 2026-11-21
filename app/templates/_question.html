@@ -1,7 +1,7 @@
 {# Shows one question: clean text + its pictures, with the original crop one tap away.
-   Needs: pq (PaperQuestion). Optional: number. #}
+   Needs: pq (PaperQuestion). Optional: number, choose (multiple-choice options answer the form). #}
 {% if pq.problem.transcription and pq.problem.transcription.strip() and not pq.show_original %}
-  <div class="qtext">{{ question_html(pq.problem.transcription, pq.figure_paths) }}</div>
+  <div class="qtext">{{ question_html(pq.problem.transcription, pq.figure_paths, choose if choose is defined else None) }}</div>
   <details class="original">
     <summary>See the original</summary>
     {% for path in pq.crop_paths %}<img class="qimg" src="/files/{{ path }}" alt="Original question {{ pq.number }}" loading="lazy">{% endfor %}

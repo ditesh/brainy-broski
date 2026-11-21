@@ -224,3 +224,14 @@ input[type="checkbox"]:focus-visible { outline: 3px solid var(--sun); outline-of
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .mcq-options { list-style: none; padding: 0; margin: 10px 0; display: grid; gap: 6px; }
 .mcq-options li { padding: 6px 12px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.mcq-options.answerable { gap: 8px; }
+.mcq-options.answerable li { padding: 0; background: none; }
+.mcq-choice { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: 52px; padding: 8px 14px;
+              text-align: left; font-weight: var(--fw-regular); border-radius: 14px; border: 2px solid var(--line);
+              background: var(--card); color: var(--fg); box-shadow: none; }
+.mcq-choice:hover, .mcq-choice:focus-visible { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--card)); }
+.mcq-letter { flex: 0 0 auto; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+              font-weight: var(--fw-black); background: color-mix(in srgb, var(--accent) 14%, var(--card)); color: var(--accent); }
+.mcq-choice.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--card)); }
+.mcq-choice.selected .mcq-letter { background: var(--accent); color: var(--accent-fg); }
+.mcq-hint { margin: 6px 0 0; font-size: var(--fs-sm); }

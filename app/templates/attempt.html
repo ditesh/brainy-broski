@@ -12,12 +12,17 @@
 </nav>
 <div class="card">
   <p><strong>Question {{ current }}</strong> <span class="muted">· {{ pq.points }} point{{ "s" if pq.points != 1 }}</span></p>
+  {% set t = pq.problem.answer_type.value %}
+  {% set tap_options = t == "mcq" and not pq.show_original and has_mcq_options(pq.problem.transcription) %}
+  {% if tap_options %}{% set choose = {"form": "answer-form", "selected": r.first_answer} %}{% endif %}
   {% include "_question.html" %}
+  {% if tap_options %}<p class="muted mcq-hint">Tap your answer.</p>{% endif %}
 </div>
 <form method="post" action="/attempts/{{ a.id }}/answer" id="answer-form" class="stack" style="max-width:none">
   <input type="hidden" name="q" value="{{ current }}">
-  {% set t = pq.problem.answer_type.value %}
-  {% if t == "mcq" %}
+  {% if tap_options %}
+    {# the options in the question are the answer buttons #}
+  {% elif t == "mcq" %}
     <div class="mcq">
       {% for letter in "ABCDE" %}
       <button name="answer" value="{{ letter }}" class="{% if r.first_answer == letter %}selected{% endif %}"

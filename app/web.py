@@ -31,7 +31,23 @@ _OPTION = re.compile(r"^\s*\(([A-E])\)\s")
 _NEXT_OPTION = re.compile(r"\s+(?=\([B-E]\)\s)")
 
 
-def _with_option_lists(text: str) -> str:
+def _option_item(o: str, choose: dict | None) -> str:
+    """One option: plain text to read, or (when he's answering) a button that picks it."""
+    if not choose:
+        return f"<li>{md(o.strip(), inline=True)}</li>"
+    letter = _OPTION.match(o).group(1)
+    body = md(_OPTION.sub("", o, count=1).strip(), inline=True)
+    sel = choose.get("selected") == letter
+    return (f'<li><button type="submit" form="{escape(choose["form"])}" name="answer" value="{letter}" '
+            f'class="mcq-choice{" selected" if sel else ""}" aria-pressed="{"true" if sel else "false"}">'
+            f'<span class="mcq-letter">{letter}</span><span class="mcq-text">{body}</span></button></li>')
+
+
+def has_mcq_options(text: str | None) -> bool:
+    return "mcq-options" in _with_option_lists(text or "")
+
+
+def _with_option_lists(text: str, choose: dict | None = None) -> str:
     """Multiple-choice options ("(A) ...", "(B) ...") become one list, one option per line. Markdown would
     otherwise run single lines together, and some papers print all the options on one line."""
     lines: list[str] = []
@@ -44,9 +60,9 @@ def _with_option_lists(text: str) -> str:
 
     def flush():
         if len(run) >= 2:
-            items = "".join(f"<li>{md(o.strip(), inline=True)}</li>" for o in run)
+            items = "".join(_option_item(o, choose) for o in run)
             out.append(f'\n\n@@OPTS{len(_blocks)}@@\n\n')
-            _blocks.append(f'<ul class="mcq-options">{items}</ul>')
+            _blocks.append(f'<ul class="mcq-options{" answerable" if choose else ""}">{items}</ul>')
         elif run:
             out.extend(run + [""])
         run.clear()
@@ -71,13 +87,14 @@ TEMPLATES.env.filters["md"] = md
 FIGURE_MARK = re.compile(r"^\s*\[\[figure\]\]\s*$", re.M | re.I)
 
 
-def question_html(text: str | None, figure_paths: list | None) -> Markup:
-    """Question text with its pictures placed at [[figure]] markers; spare pictures go at the end."""
+def question_html(text: str | None, figure_paths: list | None, choose: dict | None = None) -> Markup:
+    """Question text with its pictures placed at [[figure]] markers; spare pictures go at the end.
+    choose={"form": id, "selected": letter} turns multiple-choice options into buttons that answer."""
     figs = [f'<img class="qfig" src="/files/{escape(p)}" alt="Diagram for this question">' for p in (figure_paths or [])]
     pieces = FIGURE_MARK.split(text or "")
     html = []
     for i, piece in enumerate(pieces):
-        html.append(_with_option_lists(piece))
+        html.append(_with_option_lists(piece, choose))
         if i < len(pieces) - 1 and figs:
             html.append(figs.pop(0))
     html.extend(figs)
@@ -85,6 +102,7 @@ def question_html(text: str | None, figure_paths: list | None) -> Markup:
 
 
 TEMPLATES.env.globals["question_html"] = question_html
+TEMPLATES.env.globals["has_mcq_options"] = has_mcq_options
 
 from app.pets.art import pet_svg  # noqa: E402
 from app.pets.creatures import CREATURES, STAGE_LABEL  # noqa: E402
